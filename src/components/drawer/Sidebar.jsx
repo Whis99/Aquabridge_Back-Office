@@ -3,26 +3,32 @@ import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText
 import { Waves } from "@mui/icons-material"
 import { useNavigate, useLocation } from "react-router-dom"
 import { navigationItems } from "../../navigationItems"
+import Logo from "../../assets/logo.png"
 
 const drawerWidth = 280
 
 export default function Sidebar({ mobileOpen, handleDrawerToggle }) {
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const drawerContent = (
     <Box sx={{ background: 'linear-gradient(180deg, #026eadff 0%, #00588be0 100%)', height: '100%' }}>
       {/* Logo */}
       <Box sx={{ p: 3, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Waves sx={{ color: '#00a8e8', fontSize: 32 }} />
-          <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 600 }}>
-            Aquabridge
-          </Typography>
+          {/* <Waves sx={{ color: '#00a8e8', fontSize: 32 }} /> */}
+          <img src={Logo} alt="TrackYI Logo" width="80" />
+          <Box sx={{ flexGrow: 1 }}>
+
+            <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 600 }}>
+              Aquabridge
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 1)', mt: 0.5 }}>
+              Admin Dashboard
+            </Typography>
+          </Box>
+
         </Box>
-        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 1)', mt: 0.5 }}>
-          Admin Dashboard
-        </Typography>
       </Box>
 
       {/* Menu Items */}
@@ -55,14 +61,14 @@ export default function Sidebar({ mobileOpen, handleDrawerToggle }) {
                 <ListItemIcon sx={{ color: '#ffffff', minWidth: 40 }}>
                   <item.icon />
                 </ListItemIcon>
-                <ListItemText 
-                  primary={item.title} 
+                <ListItemText
+                  primary={item.title}
                   sx={{
                     '& .MuiTypography-root': {
                       color: '#ffffff',
                       fontWeight: isActive ? 600 : 400
                     }
-                  }} 
+                  }}
                 />
               </ListItemButton>
             </ListItem>
