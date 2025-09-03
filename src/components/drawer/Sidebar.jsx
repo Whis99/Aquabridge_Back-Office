@@ -1,11 +1,15 @@
 import React from "react"
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material"
 import { Waves } from "@mui/icons-material"
+import { useNavigate, useLocation } from "react-router-dom"
 import { navigationItems } from "../../navigationItems"
 
 const drawerWidth = 280
 
-export default function Sidebar({ mobileOpen, handleDrawerToggle, activeTab, setActiveTab }) {
+export default function Sidebar({ mobileOpen, handleDrawerToggle }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  
   const drawerContent = (
     <Box sx={{ background: 'linear-gradient(180deg, #026eadff 0%, #00588be0 100%)', height: '100%' }}>
       {/* Logo */}
@@ -23,44 +27,47 @@ export default function Sidebar({ mobileOpen, handleDrawerToggle, activeTab, set
 
       {/* Menu Items */}
       <List sx={{ pt: 2 }}>
-        {navigationItems.map((item) => (
-          <ListItem key={item.title} disablePadding>
-            <ListItemButton
-              onClick={() => {
-                setActiveTab(item.title)
-                handleDrawerToggle(false) // close on mobile
-              }}
-              selected={activeTab === item.title}
-              sx={{
-                mx: 2,
-                borderRadius: 2,
-                mb: 1,
-                '&.Mui-selected': {
-                  background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                  }
-                },
-                '&:hover': {
-                  background: 'rgba(0, 168, 232, 0.1)',
-                }
-              }}
-            >
-              <ListItemIcon sx={{ color: '#ffffff', minWidth: 40 }}>
-                <item.icon />
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.title} 
+        {navigationItems.map((item) => {
+          const isActive = location.pathname === item.path
+          return (
+            <ListItem key={item.title} disablePadding>
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path)
+                  handleDrawerToggle(false) // close on mobile
+                }}
+                selected={isActive}
                 sx={{
-                  '& .MuiTypography-root': {
-                    color: '#ffffff',
-                    fontWeight: activeTab === item.title ? 600 : 400
+                  mx: 2,
+                  borderRadius: 2,
+                  mb: 1,
+                  '&.Mui-selected': {
+                    background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                    }
+                  },
+                  '&:hover': {
+                    background: 'rgba(0, 168, 232, 0.1)',
                   }
-                }} 
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+                }}
+              >
+                <ListItemIcon sx={{ color: '#ffffff', minWidth: 40 }}>
+                  <item.icon />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.title} 
+                  sx={{
+                    '& .MuiTypography-root': {
+                      color: '#ffffff',
+                      fontWeight: isActive ? 600 : 400
+                    }
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          )
+        })}
       </List>
     </Box>
   )

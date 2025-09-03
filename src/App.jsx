@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material'
-import seaBlueTheme from './theme'
 
 import Login from './pages/Login';
 import Home from './pages/Home';
 import { Dashboard } from './components/Dashboard';
+import Users from './components/Users';
+import Stocks from './components/Stocks';
+import Wallet from './components/Wallet';
+import Profile from './components/Profile';
 
 import './App.css'
 
@@ -15,21 +17,18 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Login />} />
-        {/* <Route path="/sign-up" element={<SignUp />} /> */}
 
         {/* Dashboard with nested routes */}
         <Route path="/home" element={<Home />}>
           <Route index element={<Dashboard />} />
-          {/* <Route path="account/new" element={<NewAccount />} />
-          <Route path="account/view" element={<ViewAccount />} /> */}
+          <Route path="users" element={<Users />} />
+          <Route path="stock" element={<Stocks />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>
     </>
-    //   <ThemeProvider theme={seaBlueTheme}>
-    //   {/* <CssBaseline /> */}
-      
-    // </ThemeProvider>
   )
 }
 

@@ -56,7 +56,7 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <Box sx={{ textAlign: "center",  }}>
-            <img src={Logo} alt="TrackYI Logo" width="250" />
+            <img src={Logo} alt="TrackYI Logo" width="150" />
           </Box>
 
           {/* Titre */}
@@ -67,7 +67,7 @@ export default function LoginPage() {
             gutterBottom 
             sx={{ fontWeight: 600 }}
           >
-            Aquabridge Back-Office
+            Welcome Back!
           </Typography>
 
           {/* Champ Email */}

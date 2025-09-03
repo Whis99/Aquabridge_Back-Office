@@ -2,13 +2,10 @@
 import React from 'react'
 import { Box, Toolbar } from '@mui/material'
 import Sidebar from '../components/drawer/Sidebar'
-// import Menu from '../components/Menu'
 import { Outlet } from 'react-router-dom'
-import { navigationItems } from '../navigationItems' // single source of nav items
 
 const Home = () => {
   const [language, setLanguage] = React.useState('EN')
-  const [activeTab, setActiveTab] = React.useState("Dashboard")
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
   const handleDrawerToggle = (open = !mobileOpen) => {
@@ -21,8 +18,6 @@ const Home = () => {
       <Sidebar
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
       />
 
       {/* Main content area */}
