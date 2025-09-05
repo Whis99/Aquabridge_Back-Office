@@ -15,7 +15,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Link } from "react-router-dom";
 import {colors} from "../Constant";
 import { useNavigate } from 'react-router-dom';
-import Logo from "../../src/assets/logo.png";
+import Logo from "../../src/assets/Logo.png";
 
 
 
