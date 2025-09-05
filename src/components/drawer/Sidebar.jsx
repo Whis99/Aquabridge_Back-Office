@@ -3,7 +3,7 @@ import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText
 import { Waves } from "@mui/icons-material"
 import { useNavigate, useLocation } from "react-router-dom"
 import { navigationItems } from "../../navigationItems"
-import Logo from "../../assets/logo.png"
+import Logo from "../../assets/Logo.png"
 
 const drawerWidth = 280
 
