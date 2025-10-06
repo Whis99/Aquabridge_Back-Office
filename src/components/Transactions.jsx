@@ -348,9 +348,28 @@ const Transactions = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Typography variant="h4" sx={{ color: '#0e0e0eff', fontWeight: 700, mb: 4 }}>
-        Transaction Analytics
-      </Typography>
+      {/* Header Section - Matching Dashboard Style */}
+      <Box sx={{ mb: { xs: 1, md: 1.5 }, textAlign: 'center' }}>
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          sx={{
+            color: '#00588be0',
+            fontWeight: 600,
+            mb: 0.5
+          }}
+        >
+          Transaction Analytics
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: '#4f4f4fb3',
+            fontSize: isMobile ? '0.8rem' : '0.9rem'
+          }}
+        >
+          Monitor transaction flows, analyze patterns, and track financial performance
+        </Typography>
+      </Box>
 
       {/* Statistics Cards */}
       <Grid container spacing={{ xs: 1, sm: 2, md: 2 }} sx={{ mb: 3 }}>

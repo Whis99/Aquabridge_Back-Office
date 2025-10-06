@@ -554,10 +554,30 @@ const Users = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ color: '#0e0e0eff', fontWeight: 700 }}>
+      {/* Header Section - Matching Dashboard Style */}
+      <Box sx={{ mb: { xs: 1, md: 1.5 }, textAlign: 'center' }}>
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          sx={{
+            color: '#00588be0',
+            fontWeight: 600,
+            mb: 0.5
+          }}
+        >
           User Management
         </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: '#4f4f4fb3',
+            fontSize: isMobile ? '0.8rem' : '0.9rem'
+          }}
+        >
+          Manage users, roles, and permissions across the Aquabridge platform
+        </Typography>
+      </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 4 }}>
         <Button
           variant="contained"
           startIcon={<AdminIcon />}
