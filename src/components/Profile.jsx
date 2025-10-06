@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Card,
@@ -13,7 +13,10 @@ import {
   ListItemIcon,
   ListItemText,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Alert,
+  CircularProgress,
+  Divider
 } from '@mui/material'
 import {
   Security as SecurityIcon,
@@ -23,89 +26,93 @@ import {
   Logout as LogoutIcon,
   Computer as ComputerIcon,
   AccessTime as AccessTimeIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  AdminPanelSettings as AdminIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  LocationOn as LocationIcon,
+  Person as PersonIcon
 } from '@mui/icons-material'
-
-// Sample user data
-const userData = {
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  phone: '+1 (555) 123-4567',
-  location: 'San Francisco, CA',
-  avatar: 'JD'
-}
-
-// Sample recent activity data
-const recentActivity = [
-  {
-    id: 1,
-    action: 'Logged in',
-    device: 'Chrome on Mac',
-    location: 'San Francisco, CA',
-    time: '2 hours ago',
-    icon: ComputerIcon
-  },
-  {
-    id: 2,
-    action: 'Password changed',
-    device: 'Chrome on Mac',
-    location: 'San Francisco, CA',
-    time: '1 day ago',
-    icon: SecurityIcon
-  },
-  {
-    id: 3,
-    action: 'Profile updated',
-    device: 'Safari on iPhone',
-    location: 'San Francisco, CA',
-    time: '3 days ago',
-    icon: EditIcon
-  },
-  {
-    id: 4,
-    action: 'Logged in',
-    device: 'Chrome on Mac',
-    location: 'San Francisco, CA',
-    time: '5 days ago',
-    icon: ComputerIcon
-  }
-]
-
-// Security settings options
-const securitySettings = [
-  {
-    id: 1,
-    title: 'Change Password',
-    icon: SecurityIcon,
-    color: '#00588be0'
-  },
-  {
-    id: 2,
-    title: 'Privacy Settings',
-    icon: VisibilityIcon,
-    color: '#00588be0'
-  },
-  {
-    id: 3,
-    title: 'Notification Preferences',
-    icon: NotificationsIcon,
-    color: '#00588be0'
-  },
-  {
-    id: 4,
-    title: 'Payment Methods',
-    icon: CreditCardIcon,
-    color: '#00588be0'
-  }
-]
+import { useNavigate } from 'react-router-dom'
+import { auth, db } from '../firebase'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default function Profile() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const navigate = useNavigate()
   
-  const [formData, setFormData] = useState(userData)
+  const [user, setUser] = useState(null)
+  const [userData, setUserData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({})
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Listen to auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
+        try {
+          // Get user data from Firestore
+          const userRef = doc(db, 'users', currentUser.uid)
+          const userSnap = await getDoc(userRef)
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data()
+            setUserData(userData)
+            setFormData({
+              firstName: userData.name?.split(' ')[0] || '',
+              lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+              email: userData.email || currentUser.email,
+              phone: userData.phone || '',
+              location: userData.location || '',
+              role: userData.role || 'admin'
+            })
+          } else {
+            // Fallback to auth user data
+            setUserData({
+              name: currentUser.displayName || 'Admin User',
+              email: currentUser.email,
+              role: 'admin'
+            })
+            setFormData({
+              firstName: currentUser.displayName?.split(' ')[0] || 'Admin',
+              lastName: currentUser.displayName?.split(' ').slice(1).join(' ') || 'User',
+              email: currentUser.email,
+              phone: '',
+              location: '',
+              role: 'admin'
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error)
+          // Fallback to auth user data
+          setUserData({
+            name: currentUser.displayName || 'Admin User',
+            email: currentUser.email,
+            role: 'admin'
+          })
+          setFormData({
+            firstName: currentUser.displayName?.split(' ')[0] || 'Admin',
+            lastName: currentUser.displayName?.split(' ').slice(1).join(' ') || 'User',
+            email: currentUser.email,
+            phone: '',
+            location: '',
+            role: 'admin'
+          })
+        }
+      } else {
+        // User not logged in, redirect to login
+        navigate('/')
+      }
+      setIsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [navigate])
 
   const handleInputChange = (field) => (event) => {
     setFormData({
@@ -117,97 +124,70 @@ export default function Profile() {
   const handleSave = () => {
     setIsEditing(false)
     console.log('Profile saved:', formData)
+    // Here you would typically update the user data in Firestore
   }
 
   const handleCancel = () => {
-    setFormData(userData)
+    setFormData({
+      firstName: userData?.name?.split(' ')[0] || '',
+      lastName: userData?.name?.split(' ').slice(1).join(' ') || '',
+      email: userData?.email || user?.email,
+      phone: userData?.phone || '',
+      location: userData?.location || '',
+      role: userData?.role || 'admin'
+    })
     setIsEditing(false)
   }
 
-  const ActivityItem = ({ activity }) => (
-    <ListItem sx={{ 
-      px: 0, 
-      py: 1.5,
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-      '&:last-child': {
-        borderBottom: 'none'
-      }
-    }}>
-      <ListItemIcon sx={{ minWidth: 40 }}>
-        <Avatar sx={{ 
-          bgcolor: 'rgba(0, 88, 139, 0.1)',
-          width: 32,
-          height: 32
-        }}>
-          <activity.icon sx={{ color: '#00588be0', fontSize: 18 }} />
-        </Avatar>
-      </ListItemIcon>
-      <ListItemText
-        primary={
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              color: '#0e0e0eff',
-              fontWeight: 500,
-              fontSize: isMobile ? '0.9rem' : '1rem'
-            }}
-          >
-            {activity.action}
-          </Typography>
-        }
-        secondary={
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              color: '#4f4f4fb3',
-              fontSize: isMobile ? '0.75rem' : '0.8rem'
-            }}
-          >
-            {activity.device} • {activity.location}
-          </Typography>
-        }
-      />
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-        <AccessTimeIcon sx={{ fontSize: 14, color: '#4f4f4fb3' }} />
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            color: '#4f4f4fb3',
-            fontSize: isMobile ? '0.75rem' : '0.8rem'
-          }}
-        >
-          {activity.time}
-        </Typography>
-      </Box>
-    </ListItem>
-  )
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true)
+      await signOut(auth)
+      navigate('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setIsLoggingOut(false)
+    }
+  }
 
-  const SecurityItem = ({ setting }) => (
-    <ListItem sx={{ px: 0, py: 1 }}>
-      <Button
-        fullWidth
-        variant="outlined"
-        startIcon={<setting.icon sx={{ color: setting.color }} />}
-        sx={{
-          borderColor: 'rgba(255, 255, 255, 0.2)',
-          color: '#0e0e0eff',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: 2,
-          py: 1.5,
-          textTransform: 'none',
-          justifyContent: 'flex-start',
-          '&:hover': {
-            backgroundColor: 'rgba(0, 88, 139, 0.1)',
-            borderColor: '#00588be0'
-          }
-        }}
-      >
-        <Typography sx={{ fontWeight: 500, fontSize: isMobile ? '0.9rem' : '1rem' }}>
-          {setting.title}
-        </Typography>
-      </Button>
-    </ListItem>
-  )
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
+  }
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'N/A'
+    return timestamp.toDate().toLocaleDateString()
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        minHeight: '100vh'
+      }}>
+        <CircularProgress size={60} />
+      </Box>
+    )
+  }
+
+  if (!user) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        minHeight: '100vh'
+      }}>
+        <Alert severity="error">User not found. Please log in again.</Alert>
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ 
@@ -227,7 +207,7 @@ export default function Profile() {
             mb: 0.5
           }}
         >
-          Profile Settings
+          Admin Profile
         </Typography>
         <Typography 
           variant="body2" 
@@ -236,7 +216,7 @@ export default function Profile() {
             fontSize: isMobile ? '0.8rem' : '0.9rem'
           }}
         >
-          Manage your account settings and preferences
+          Manage your admin account settings
         </Typography>
       </Box>
 
@@ -253,7 +233,7 @@ export default function Profile() {
       }}>
         <CardContent sx={{ p: { xs: 2, md: 3 } }}>
           {/* Section Header */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography 
               variant={isMobile ? "h6" : "h5"} 
               sx={{ 
@@ -264,15 +244,22 @@ export default function Profile() {
             >
               Profile Information
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: '#4f4f4fb3',
-                fontSize: isMobile ? '0.8rem' : '0.9rem'
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => setIsEditing(!isEditing)}
+              size="small"
+              sx={{
+                borderColor: 'rgba(0, 168, 232, 0.3)',
+                color: '#00a8e8',
+                '&:hover': {
+                  borderColor: '#00a8e8',
+                  background: 'rgba(0, 168, 232, 0.1)'
+                }
               }}
             >
-              Update your personal information and profile details
-            </Typography>
+              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+            </Button>
           </Box>
 
           {/* Profile Content */}
@@ -288,35 +275,13 @@ export default function Profile() {
                   fontWeight: 600,
                   mb: 2
                 }}>
-                  {formData.avatar}
+                  {getInitials(formData.firstName, formData.lastName)}
                 </Avatar>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    color: '#0e0e0eff',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: 2,
-                    mb: 1,
-                    textTransform: 'none',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 88, 139, 0.1)',
-                      borderColor: '#00588be0'
-                    }
-                  }}
-                >
-                  Change Photo
-                </Button>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#f44336',
-                    cursor: 'pointer',
-                    fontSize: isMobile ? '0.75rem' : '0.8rem'
-                  }}
-                >
-                  Remove Photo
+                <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600, textAlign: 'center' }}>
+                  {formData.firstName} {formData.lastName}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#4f4f4fb3', textAlign: 'center' }}>
+                  {formData.role?.toUpperCase()}
                 </Typography>
               </Box>
             </Grid>
@@ -331,6 +296,9 @@ export default function Profile() {
                     value={formData.firstName}
                     onChange={handleInputChange('firstName')}
                     disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: <PersonIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
+                    }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -364,6 +332,9 @@ export default function Profile() {
                     value={formData.lastName}
                     onChange={handleInputChange('lastName')}
                     disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: <PersonIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
+                    }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -397,6 +368,9 @@ export default function Profile() {
                     value={formData.email}
                     onChange={handleInputChange('email')}
                     disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: <EmailIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
+                    }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -430,6 +404,9 @@ export default function Profile() {
                     value={formData.phone}
                     onChange={handleInputChange('phone')}
                     disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: <PhoneIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
+                    }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -463,6 +440,9 @@ export default function Profile() {
                     value={formData.location}
                     onChange={handleInputChange('location')}
                     disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: <LocationIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
+                    }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -492,34 +472,34 @@ export default function Profile() {
               </Grid>
 
               {/* Action Buttons */}
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 2, 
-                mt: 3,
-                justifyContent: 'flex-end',
-                flexWrap: 'wrap'
-              }}>
-                <Button
-                  variant="outlined"
-                  onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-                  sx={{
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    color: '#0e0e0eff',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: 2,
-                    px: 3,
-                    py: 1,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'rgba(255, 255, 255, 0.3)'
-                    }
-                  }}
-                >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
-                </Button>
-                {isEditing && (
+              {isEditing && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 2, 
+                  mt: 3,
+                  justifyContent: 'flex-end',
+                  flexWrap: 'wrap'
+                }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleCancel}
+                    sx={{
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      color: '#0e0e0eff',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: 2,
+                      px: 3,
+                      py: 1,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderColor: 'rgba(255, 255, 255, 0.3)'
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     variant="contained"
                     onClick={handleSave}
@@ -537,16 +517,16 @@ export default function Profile() {
                   >
                     Save Changes
                   </Button>
-                )}
-              </Box>
+                </Box>
+              )}
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
-      {/* Recent Activity and Security Settings */}
+      {/* Account Information & Security */}
       <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
-        {/* Recent Activity Section */}
+        {/* Account Information */}
         <Grid item xs={12} lg={6}>
           <Card sx={{ 
             background: 'rgba(255, 255, 255, 0.1)',
@@ -568,7 +548,7 @@ export default function Profile() {
                     mb: 0.5
                   }}
                 >
-                  Recent Activity
+                  Account Information
                 </Typography>
                 <Typography 
                   variant="body2" 
@@ -577,20 +557,58 @@ export default function Profile() {
                     fontSize: isMobile ? '0.8rem' : '0.9rem'
                   }}
                 >
-                  Your recent account activity and logins
+                  Your account details and activity
                 </Typography>
               </Box>
 
               <List sx={{ p: 0 }}>
-                {recentActivity.map((activity) => (
-                  <ActivityItem key={activity.id} activity={activity} />
-                ))}
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon>
+                    <AdminIcon sx={{ color: '#00588be0' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Role"
+                    secondary={formData.role?.toUpperCase() || 'ADMIN'}
+                    primaryTypographyProps={{ color: '#0e0e0eff', fontWeight: 500 }}
+                    secondaryTypographyProps={{ color: '#4f4f4fb3' }}
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon>
+                    <ComputerIcon sx={{ color: '#4caf50' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Last Login"
+                    secondary={user?.metadata?.lastSignInTime ? 
+                      new Date(user.metadata.lastSignInTime).toLocaleString() : 
+                      'N/A'
+                    }
+                    primaryTypographyProps={{ color: '#0e0e0eff', fontWeight: 500 }}
+                    secondaryTypographyProps={{ color: '#4f4f4fb3' }}
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon>
+                    <AccessTimeIcon sx={{ color: '#ff9800' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Account Created"
+                    secondary={user?.metadata?.creationTime ? 
+                      new Date(user.metadata.creationTime).toLocaleDateString() : 
+                      'N/A'
+                    }
+                    primaryTypographyProps={{ color: '#0e0e0eff', fontWeight: 500 }}
+                    secondaryTypographyProps={{ color: '#4f4f4fb3' }}
+                  />
+                </ListItem>
               </List>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Security Settings Section */}
+        {/* Security Settings */}
         <Grid item xs={12} lg={6}>
           <Card sx={{ 
             background: 'rgba(255, 255, 255, 0.1)',
@@ -621,21 +639,46 @@ export default function Profile() {
                     fontSize: isMobile ? '0.8rem' : '0.9rem'
                   }}
                 >
-                  Manage your account security and privacy
+                  Manage your account security
                 </Typography>
               </Box>
 
               <List sx={{ p: 0 }}>
-                {securitySettings.map((setting) => (
-                  <SecurityItem key={setting.id} setting={setting} />
-                ))}
-                
-                {/* Sign Out Button */}
-                <ListItem sx={{ px: 0, py: 1, mt: 2 }}>
+                <ListItem sx={{ px: 0, py: 1 }}>
                   <Button
                     fullWidth
                     variant="outlined"
-                    startIcon={<LogoutIcon sx={{ color: '#f44336' }} />}
+                    startIcon={<SecurityIcon sx={{ color: '#00588be0' }} />}
+                    sx={{
+                      borderColor: 'rgba(0, 88, 139, 0.3)',
+                      color: '#00588be0',
+                      backgroundColor: 'rgba(0, 88, 139, 0.05)',
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      justifyContent: 'flex-start',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 88, 139, 0.1)',
+                        borderColor: '#00588be0'
+                      }
+                    }}
+                  >
+                    <Typography sx={{ fontWeight: 500, fontSize: isMobile ? '0.9rem' : '1rem' }}>
+                      Change Password
+                    </Typography>
+                  </Button>
+                </ListItem>
+                
+                <Divider sx={{ my: 1 }} />
+                
+                {/* Sign Out Button */}
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={isLoggingOut ? <CircularProgress size={20} /> : <LogoutIcon sx={{ color: '#f44336' }} />}
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                     sx={{
                       borderColor: 'rgba(244, 67, 54, 0.3)',
                       color: '#f44336',
@@ -647,11 +690,15 @@ export default function Profile() {
                       '&:hover': {
                         backgroundColor: 'rgba(244, 67, 54, 0.1)',
                         borderColor: '#f44336'
+                      },
+                      '&:disabled': {
+                        backgroundColor: 'rgba(244, 67, 54, 0.05)',
+                        color: 'rgba(244, 67, 54, 0.5)'
                       }
                     }}
                   >
                     <Typography sx={{ fontWeight: 500, fontSize: isMobile ? '0.9rem' : '1rem' }}>
-                      Sign Out
+                      {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
                     </Typography>
                   </Button>
                 </ListItem>

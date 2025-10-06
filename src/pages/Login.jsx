@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -8,33 +8,65 @@ import {
   Paper,
   InputAdornment,
   IconButton,
-//   Link
+  CircularProgress,
+  Alert,
 } from "@mui/material";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { Link } from "react-router-dom";
-import {colors} from "../Constant";
-import { useNavigate } from 'react-router-dom';
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Link, useNavigate } from "react-router-dom";
+import { colors } from "../Constant";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 import Logo from "../../src/assets/Logo.png";
 
-
-
 export default function LoginPage() {
-      const navigate = useNavigate();
-        // State variables for email and password
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    
-    // Password visibility state
-    const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-    const handleClickShowPassword = () => setShowPassword(!showPassword);
+  // State variables
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-      // Login code logic
-      navigate('/home');
+  // Password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+
+  // Handle login
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      // 1. Sign in user
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Fetch role from Firestore
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+
+        if (userData.role === "admin") {
+          navigate("/home"); // ✅ allow access to back office
+        } else {
+          setError("Access denied. Only admins can access this area.");
+        }
+      } else {
+        setError("User profile not found.");
+      }
+    } catch (err) {
+      setError("Error while logging in");
+      console.error("Login error:", err.message);
+    } finally {
+      setLoading(false);
     }
+  };
+
   return (
     <Box
       sx={{
@@ -46,7 +78,7 @@ export default function LoginPage() {
     >
       <Container maxWidth="sm">
         <Paper
-          elevation={3}
+          elevation={4}
           sx={{
             padding: 4,
             borderRadius: 3,
@@ -55,24 +87,31 @@ export default function LoginPage() {
           }}
         >
           {/* Logo */}
-          <Box sx={{ textAlign: "center",  }}>
+          <Box sx={{ textAlign: "center", mb: 2 }}>
             <img src={Logo} alt="TrackYI Logo" width="150" />
           </Box>
 
-          {/* Titre */}
-          <Typography 
-            variant="h5" 
-            align="center" 
-            color={colors.primaryText} 
-            gutterBottom 
+          {/* Title */}
+          <Typography
+            variant="h5"
+            align="center"
+            color={colors.primaryText}
+            gutterBottom
             sx={{ fontWeight: 600 }}
           >
             Welcome Back!
           </Typography>
 
-          {/* Champ Email */}
+          {/* Error alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Email */}
           <TextField
-            label="Username"
+            label="Email"
             variant="outlined"
             fullWidth
             margin="normal"
@@ -80,7 +119,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          {/* Champ Mot de passe */}
+          {/* Password */}
           <TextField
             label="Password"
             type={showPassword ? "text" : "password"}
@@ -92,11 +131,7 @@ export default function LoginPage() {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                    size="small"
-                  >
+                  <IconButton onClick={handleClickShowPassword} edge="end" size="small">
                     {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                   </IconButton>
                 </InputAdornment>
@@ -104,10 +139,10 @@ export default function LoginPage() {
             }}
           />
 
-          {/* Lien mot de passe oublié */}
+          {/* Forgot password link */}
           <Box textAlign="left" mt={1}>
-            <Link to="/forgot-password" sx={{ color: colors.accent }}>
-              Forgot password ?
+            <Link to="/forgot-password" style={{ color: colors.accent }}>
+              Forgot password?
             </Link>
           </Box>
 
@@ -115,6 +150,7 @@ export default function LoginPage() {
           <Button
             variant="contained"
             fullWidth
+            disabled={loading}
             onClick={handleLogin}
             sx={{
               mt: 3,
@@ -127,7 +163,7 @@ export default function LoginPage() {
               },
             }}
           >
-            Login
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
           </Button>
         </Paper>
       </Container>

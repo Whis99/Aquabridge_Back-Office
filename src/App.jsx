@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import { Dashboard } from './components/Dashboard';
 import Users from './components/Users';
 import Stocks from './components/Stocks';
+import Orders from './components/Orders';
+import Transactions from './components/Transactions';
 import Wallet from './components/Wallet';
 import Profile from './components/Profile';
 
@@ -18,14 +20,16 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<Login />} />
 
-        {/* Dashboard with nested routes */}
-        <Route path="/home" element={<Home />}>
-          <Route index element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="stock" element={<Stocks />} />
-          <Route path="wallet" element={<Wallet />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
+               {/* Dashboard with nested routes */}
+               <Route path="/home" element={<Home />}>
+                 <Route index element={<Dashboard />} />
+                 <Route path="users" element={<Users />} />
+                 <Route path="stock" element={<Stocks />} />
+                 <Route path="orders" element={<Orders />} />
+                 <Route path="transactions" element={<Transactions />} />
+                 <Route path="wallet" element={<Wallet />} />
+                 <Route path="profile" element={<Profile />} />
+               </Route>
       </Routes>
     </Router>
     </>
