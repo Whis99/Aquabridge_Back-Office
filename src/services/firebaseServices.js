@@ -559,5 +559,137 @@ export const updateStock = async (entityId, stockData) => {
   }
 };
 
+// ==================== WALLET MANAGEMENT FUNCTIONS ====================
+
+// Get all withdrawals from the withdrawals collection
+export const getAllWithdrawals = async () => {
+  try {
+    const withdrawalsRef = collection(db, "withdrawals");
+    const snapshot = await getDocs(withdrawalsRef);
+    return snapshot;
+  } catch (error) {
+    console.error("Error fetching withdrawals:", error);
+    throw error;
+  }
+};
+
+// Get withdrawal by ID
+export const getWithdrawalById = async (withdrawalId) => {
+  try {
+    const withdrawalRef = doc(db, "withdrawals", withdrawalId);
+    const withdrawalDoc = await getDoc(withdrawalRef);
+    
+    if (withdrawalDoc.exists()) {
+      return { success: true, data: { id: withdrawalDoc.id, ...withdrawalDoc.data() } };
+    } else {
+      return { success: false, message: "Withdrawal not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching withdrawal:", error);
+    return { success: false, message: "Failed to fetch withdrawal" };
+  }
+};
+
+// Update withdrawal status
+export const updateWithdrawalStatus = async (withdrawalId, newStatus, adminId = "ADM-202509-1344") => {
+  try {
+    const withdrawalRef = doc(db, "withdrawals", withdrawalId);
+    const updateData = {
+      status: newStatus,
+      updatedAt: new Date()
+    };
+
+    if (newStatus === 'approved') {
+      updateData.approved_at = new Date();
+      updateData.approved_by = adminId;
+    } else if (newStatus === 'rejected') {
+      updateData.rejection_reason = "Rejected by admin";
+    } else if (newStatus === 'processed') {
+      updateData.processed_at = new Date();
+    }
+
+    await updateDoc(withdrawalRef, updateData);
+    return { success: true, message: `Withdrawal ${newStatus} successfully` };
+  } catch (error) {
+    console.error("Error updating withdrawal status:", error);
+    return { success: false, message: "Failed to update withdrawal status" };
+  }
+};
+
+// Get all wallets from the wallets collection
+export const getAllWallets = async () => {
+  try {
+    const walletsRef = collection(db, "wallets");
+    const snapshot = await getDocs(walletsRef);
+    return snapshot;
+  } catch (error) {
+    console.error("Error fetching wallets:", error);
+    throw error;
+  }
+};
+
+// Get wallet by user ID
+export const getWalletByUserId = async (userId) => {
+  try {
+    const walletRef = doc(db, "wallets", userId);
+    const walletDoc = await getDoc(walletRef);
+    
+    if (walletDoc.exists()) {
+      return { success: true, data: { id: walletDoc.id, ...walletDoc.data() } };
+    } else {
+      return { success: false, message: "Wallet not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching wallet:", error);
+    return { success: false, message: "Failed to fetch wallet" };
+  }
+};
+
+// Update wallet balance
+export const updateWalletBalance = async (userId, amount, reason, adminId = "ADM-202509-1344") => {
+  try {
+    const walletRef = doc(db, "wallets", userId);
+    const walletDoc = await getDoc(walletRef);
+    
+    if (!walletDoc.exists()) {
+      return { success: false, message: "Wallet not found for this user" };
+    }
+
+    const currentBalance = walletDoc.data().totalBalance || 0;
+    const newBalance = currentBalance + amount;
+
+    // Update wallet balance
+    await updateDoc(walletRef, {
+      totalBalance: newBalance,
+      lastUpdated: new Date()
+    });
+
+    // Create transaction record
+    const transactionData = {
+      transaction_id: `TXN-${Date.now()}`,
+      user_id: userId,
+      amount: amount,
+      transaction_type: amount > 0 ? 'wallet_credit' : 'wallet_debit',
+      description: reason || `Wallet balance ${amount > 0 ? 'increased' : 'decreased'} by admin`,
+      status: 'completed',
+      created_at: new Date(),
+      processed_by: adminId,
+      balance_before: currentBalance,
+      balance_after: newBalance
+    };
+
+    await addDoc(collection(db, "transactions"), transactionData);
+
+    return { 
+      success: true, 
+      message: `Wallet balance updated successfully. New balance: $${newBalance.toLocaleString()}`,
+      newBalance: newBalance
+    };
+  } catch (error) {
+    console.error("Error updating wallet balance:", error);
+    return { success: false, message: "Failed to update wallet balance" };
+  }
+};
+
 
 

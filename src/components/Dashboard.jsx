@@ -587,262 +587,7 @@ const Dashboard = React.memo(() => {
         </Typography>
       </Box>
 
-      {/* Charts Section - Top Priority */}
-      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ mb: { xs: 2, md: 3 } }}>
-        {/* Glass Eel Trading Chart - Shows fisherman to association transactions over time */}
-        {/* Data Source: getAllTransactions() Firebase function */}
-        {/* Filters: transaction_type === 'fisherman_to_association' */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            height: '100%',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
-            }
-          }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              {/* Chart header with title and time period filters */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography
-                  variant={isMobile ? "subtitle1" : "h6"}
-                  sx={{
-                    color: '#0e0e0eff',
-                    fontWeight: 600,
-                    pr: 2 // Add padding to the right
-                  }}
-                >
-                  Glass Eel Trading Activity
-                </Typography>
-                
-                {/* Time period filter buttons - Daily, Weekly, Monthly, Yearly */}
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  {['daily', 'weekly', 'monthly', 'yearly'].map((filter) => (
-                    <Button
-                      key={filter}
-                      variant={eelTradingFilter === filter ? 'contained' : 'outlined'}
-                      size="small"
-                      onClick={() => setEelTradingFilter(filter)}
-                      sx={{
-                        textTransform: 'capitalize',
-                        fontSize: '0.75rem',
-                        minWidth: 'auto',
-                        px: 2,
-                        py: 0.5,
-                        ...(eelTradingFilter === filter ? {
-                          background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                          color: '#ffffff',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                          }
-                        } : {
-                          borderColor: 'rgba(0, 168, 232, 0.3)',
-                          color: '#00a8e8',
-                          '&:hover': {
-                            borderColor: '#00a8e8',
-                            background: 'rgba(0, 168, 232, 0.1)'
-                          }
-                        })
-                      }}
-                    >
-                      {filter}
-                    </Button>
-                  ))}
-              </Box>
-              </Box>
-              
-              {/* Chart description explaining the purpose */}
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#4f4f4fb3', 
-                  mb: 2, 
-                  fontSize: isMobile ? '0.75rem' : '0.875rem',
-                  fontStyle: 'italic'
-                }}
-              >
-                Track the total quantity of glass eels (kg) sold by fishermen to associations over time
-              </Typography>
-              
-              {/* Chart container with responsive height */}
-              <Box sx={{ height: { xs: 250, md: 300 } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={processedEelTradingData}>
-                    {/* Grid lines for better readability */}
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                    {/* X-axis showing time periods */}
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="#4f4f4fb3"
-                      fontSize={isMobile ? 10 : 12}
-                    />
-                    {/* Y-axis showing glass eel quantity amounts */}
-                    <YAxis 
-                      stroke="#4f4f4fb3"
-                      fontSize={isMobile ? 10 : 12}
-                    />
-                    {/* Interactive tooltip showing detailed information */}
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        border: '1px solid rgba(76, 175, 80, 0.2)',
-                        borderRadius: '8px',
-                        color: '#0e0e0eff'
-                      }} 
-                      formatter={(value, name, props) => {
-                        if (name === 'value') {
-                          return [`${value} kg`, 'Glass Eel Quantity']
-                        }
-                        return [value, name]
-                      }}
-                      labelFormatter={(label) => `${eelTradingFilter === 'daily' ? 'Day' : eelTradingFilter === 'weekly' ? 'Week' : eelTradingFilter === 'yearly' ? 'Year' : 'Month'}: ${label}`}
-                    />
-                    {/* Line chart showing glass eel quantity sold over time */}
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#4caf50" 
-                      strokeWidth={2}
-                      dot={{ fill: '#4caf50', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#4caf50', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Orders Performance Chart */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            height: '100%',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
-            }
-          }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              {/* Chart header with title and time period filters */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography
-                  variant={isMobile ? "subtitle1" : "h6"}
-                  sx={{
-                    color: '#0e0e0eff',
-                    fontWeight: 600,
-                    pr: 2 // Add padding to the right
-                  }}
-                >
-                  Glass Eel Trading Activity
-                </Typography>
-                
-                {/* Time period filter buttons - Daily, Weekly, Monthly, Yearly */}
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  {['daily', 'weekly', 'monthly', 'yearly'].map((filter) => (
-                    <Button
-                      key={filter}
-                      variant={eelTradingFilter === filter ? 'contained' : 'outlined'}
-                      size="small"
-                      onClick={() => setEelTradingFilter(filter)}
-                      sx={{
-                        textTransform: 'capitalize',
-                        fontSize: '0.75rem',
-                        minWidth: 'auto',
-                        px: 2,
-                        py: 0.5,
-                        ...(eelTradingFilter === filter ? {
-                          background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                          color: '#ffffff',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                          }
-                        } : {
-                          borderColor: 'rgba(0, 168, 232, 0.3)',
-                          color: '#00a8e8',
-                          '&:hover': {
-                            borderColor: '#00a8e8',
-                            background: 'rgba(0, 168, 232, 0.1)'
-                          }
-                        })
-                      }}
-                    >
-                      {filter}
-                    </Button>
-                  ))}
-              </Box>
-              </Box>
-              
-              {/* Chart description explaining the purpose */}
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#4f4f4fb3', 
-                  mb: 2, 
-                  fontSize: isMobile ? '0.75rem' : '0.875rem',
-                  fontStyle: 'italic'
-                }}
-              >
-                Track the total quantity of glass eels (kg) sold by fishermen to associations over time
-              </Typography>
-              
-              {/* Chart container with responsive height */}
-              <Box sx={{ height: { xs: 250, md: 300 } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={processedEelTradingData}>
-                    {/* Grid lines for better readability */}
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                    {/* X-axis showing time periods */}
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="#4f4f4fb3"
-                      fontSize={isMobile ? 10 : 12}
-                    />
-                    {/* Y-axis showing glass eel quantity amounts */}
-                    <YAxis 
-                      stroke="#4f4f4fb3"
-                      fontSize={isMobile ? 10 : 12}
-                    />
-                    {/* Interactive tooltip showing detailed information */}
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        border: '1px solid rgba(76, 175, 80, 0.2)',
-                        borderRadius: '8px',
-                        color: '#0e0e0eff'
-                      }} 
-                      formatter={(value, name, props) => {
-                        if (name === 'value') {
-                          return [`${value} kg`, 'Glass Eel Quantity']
-                        }
-                        return [value, name]
-                      }}
-                      labelFormatter={(label) => `${eelTradingFilter === 'daily' ? 'Day' : eelTradingFilter === 'weekly' ? 'Week' : eelTradingFilter === 'yearly' ? 'Year' : 'Month'}: ${label}`}
-                    />
-                    {/* Line chart showing glass eel quantity sold over time */}
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#4caf50" 
-                      strokeWidth={2}
-                      dot={{ fill: '#4caf50', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#4caf50', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Exchange Rate and Glass Eel Prices - Smaller Cards */}
+      {/* Exchange Rate and Glass Eel Prices - Top Section */}
       <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ mb: { xs: 2, md: 3 } }}>
         {/* Exchange Rate - Smaller */}
         <Grid item xs={12} sm={6} lg={3}>
@@ -1045,6 +790,263 @@ const Dashboard = React.memo(() => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Charts Section - Side by Side */}
+      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ mb: { xs: 2, md: 3 } }}>
+        {/* Glass Eel Trading Chart - Shows fisherman to association transactions over time */}
+        {/* Data Source: getAllTransactions() Firebase function */}
+        {/* Filters: transaction_type === 'fisherman_to_association' */}
+        <Grid item xs={12} lg={6}>
+          <Card sx={{ 
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            height: '100%',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
+            }
+          }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              {/* Chart header with title and time period filters */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{
+                    color: '#0e0e0eff',
+                    fontWeight: 600,
+                    pr: 2 // Add padding to the right
+                  }}
+                >
+                  Glass Eel Trading Activity
+                </Typography>
+                
+                {/* Time period filter buttons - Daily, Weekly, Monthly, Yearly */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {['daily', 'weekly', 'monthly', 'yearly'].map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={eelTradingFilter === filter ? 'contained' : 'outlined'}
+                      size="small"
+                      onClick={() => setEelTradingFilter(filter)}
+                      sx={{
+                        textTransform: 'capitalize',
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 2,
+                        py: 0.5,
+                        ...(eelTradingFilter === filter ? {
+                          background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                          color: '#ffffff',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                          }
+                        } : {
+                          borderColor: 'rgba(0, 168, 232, 0.3)',
+                          color: '#00a8e8',
+                          '&:hover': {
+                            borderColor: '#00a8e8',
+                            background: 'rgba(0, 168, 232, 0.1)'
+                          }
+                        })
+                      }}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+              </Box>
+              </Box>
+              
+              {/* Chart description explaining the purpose */}
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#4f4f4fb3', 
+                  mb: 2, 
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  fontStyle: 'italic'
+                }}
+              >
+                Track the total quantity of glass eels (kg) sold by fishermen to associations over time
+              </Typography>
+              
+              {/* Chart container with responsive height */}
+              <Box sx={{ height: { xs: 250, md: 300 } }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={processedEelTradingData}>
+                    {/* Grid lines for better readability */}
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    {/* X-axis showing time periods */}
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#4f4f4fb3"
+                      fontSize={isMobile ? 10 : 12}
+                    />
+                    {/* Y-axis showing glass eel quantity amounts */}
+                    <YAxis 
+                      stroke="#4f4f4fb3"
+                      fontSize={isMobile ? 10 : 12}
+                    />
+                    {/* Interactive tooltip showing detailed information */}
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid rgba(76, 175, 80, 0.2)',
+                        borderRadius: '8px',
+                        color: '#0e0e0eff'
+                      }} 
+                      formatter={(value, name, props) => {
+                        if (name === 'value') {
+                          return [`${value} kg`, 'Glass Eel Quantity']
+                        }
+                        return [value, name]
+                      }}
+                      labelFormatter={(label) => `${eelTradingFilter === 'daily' ? 'Day' : eelTradingFilter === 'weekly' ? 'Week' : eelTradingFilter === 'yearly' ? 'Year' : 'Month'}: ${label}`}
+                    />
+                    {/* Line chart showing glass eel quantity sold over time */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#4caf50" 
+                      strokeWidth={2}
+                      dot={{ fill: '#4caf50', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#4caf50', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Orders Performance Chart - Shows client orders over time */}
+        {/* Data Source: getAllOrders() Firebase function */}
+        <Grid item xs={12} lg={6}>
+          <Card sx={{ 
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            height: '100%',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
+            }
+          }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              {/* Chart header with title and time period filters */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  sx={{
+                    color: '#0e0e0eff',
+                    fontWeight: 600,
+                    pr: 2 // Add padding to the right
+                  }}
+                >
+                  Orders Performance
+                </Typography>
+                
+                {/* Time period filter buttons - Daily, Weekly, Monthly, Yearly */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {['daily', 'weekly', 'monthly', 'yearly'].map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={chartFilter === filter ? 'contained' : 'outlined'}
+                      size="small"
+                      onClick={() => setChartFilter(filter)}
+                      sx={{
+                        textTransform: 'capitalize',
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 2,
+                        py: 0.5,
+                        ...(chartFilter === filter ? {
+                          background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                          color: '#ffffff',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
+                          }
+                        } : {
+                          borderColor: 'rgba(0, 168, 232, 0.3)',
+                          color: '#00a8e8',
+                          '&:hover': {
+                            borderColor: '#00a8e8',
+                            background: 'rgba(0, 168, 232, 0.1)'
+                          }
+                        })
+                      }}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+              </Box>
+              </Box>
+              
+              {/* Chart description explaining the purpose */}
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#4f4f4fb3', 
+                  mb: 2, 
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  fontStyle: 'italic'
+                }}
+              >
+                Track order volume trends over time to identify peak periods and optimize operations
+              </Typography>
+              
+              {/* Chart container with responsive height */}
+              <Box sx={{ height: { xs: 250, md: 300 } }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={processedChartData}>
+                    {/* Grid lines for better readability */}
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    {/* X-axis showing time periods */}
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#4f4f4fb3"
+                      fontSize={isMobile ? 10 : 12}
+                    />
+                    {/* Y-axis showing order counts */}
+                    <YAxis 
+                      stroke="#4f4f4fb3"
+                      fontSize={isMobile ? 10 : 12}
+                    />
+                    {/* Interactive tooltip showing detailed information */}
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid rgba(0, 168, 232, 0.2)',
+                        borderRadius: '8px',
+                        color: '#0e0e0eff'
+                      }} 
+                      formatter={(value, name, props) => {
+                        if (name === 'value') {
+                          return [`${value}`, 'Orders']
+                        }
+                        return [value, name]
+                      }}
+                      labelFormatter={(label) => `${chartFilter === 'daily' ? 'Day' : chartFilter === 'weekly' ? 'Week' : chartFilter === 'yearly' ? 'Year' : 'Month'}: ${label}`}
+                    />
+                    {/* Line chart showing order counts over time */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#00a8e8" 
+                      strokeWidth={2}
+                      dot={{ fill: '#00a8e8', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#00a8e8', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
 
       {/* KPI Cards Grid - Smaller and Below Charts */}
       <Grid container spacing={{ xs: 1.5, sm: 2, md: 2 }} sx={{ mb: { xs: 2, md: 3 } }}>
