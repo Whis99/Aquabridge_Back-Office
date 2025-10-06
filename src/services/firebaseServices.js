@@ -494,5 +494,70 @@ export async function updateAdminDetails(adminId, updateData) {
   }
 }
 
+// ==================== STOCK MANAGEMENT FUNCTIONS ====================
+
+// Get all stocks from the stocks collection
+export const getAllStocks = async () => {
+  try {
+    const stocksRef = collection(db, "stocks");
+    const snapshot = await getDocs(stocksRef);
+    return snapshot;
+  } catch (error) {
+    console.error("Error fetching stocks:", error);
+    throw error;
+  }
+};
+
+// Get stock by entity ID
+export const getStockByEntityId = async (entityId) => {
+  try {
+    const stockRef = doc(db, "stocks", entityId);
+    const stockDoc = await getDoc(stockRef);
+    
+    if (stockDoc.exists()) {
+      return { success: true, data: { id: stockDoc.id, ...stockDoc.data() } };
+    } else {
+      return { success: false, message: "Stock not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching stock:", error);
+    return { success: false, message: "Failed to fetch stock" };
+  }
+};
+
+// Get entity details by ID (from users collection)
+export const getEntityDetails = async (entityId) => {
+  try {
+    // Try to find in users collection by user_id
+    const usersQuery = query(collection(db, "users"), where("user_id", "==", entityId));
+    const usersSnapshot = await getDocs(usersQuery);
+    
+    if (!usersSnapshot.empty) {
+      const userDoc = usersSnapshot.docs[0];
+      return { success: true, data: { id: userDoc.id, ...userDoc.data() } };
+    } else {
+      return { success: false, message: "Entity not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching entity details:", error);
+    return { success: false, message: "Failed to fetch entity details" };
+  }
+};
+
+// Update stock data
+export const updateStock = async (entityId, stockData) => {
+  try {
+    const stockRef = doc(db, "stocks", entityId);
+    await updateDoc(stockRef, {
+      ...stockData,
+      lastUpdated: new Date()
+    });
+    return { success: true, message: "Stock updated successfully" };
+  } catch (error) {
+    console.error("Error updating stock:", error);
+    return { success: false, message: "Failed to update stock" };
+  }
+};
+
 
 

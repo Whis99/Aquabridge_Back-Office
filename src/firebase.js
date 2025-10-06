@@ -19,23 +19,6 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ,
 };
 
-// Debug: Log actual values (remove in production)
-console.log('=== Firebase Environment Debug ===');
-console.log('Raw environment variables:', {
-  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY,
-  VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
-});
-console.log('Firebase Config Values:', {
-  apiKey: firebaseConfig.apiKey,
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  storageBucket: firebaseConfig.storageBucket,
-  messagingSenderId: firebaseConfig.messagingSenderId,
-  appId: firebaseConfig.appId,
-  measurementId: firebaseConfig.measurementId
-});
-console.log('=== End Firebase Environment Debug ===');
 
 // Validate required configuration
 if (!firebaseConfig.projectId) {
