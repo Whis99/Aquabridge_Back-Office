@@ -769,6 +769,153 @@ export const getEelPriceHistory = async (currency = null, limit = 50) => {
   }
 };
 
+// ==================== BENEFIT SETTINGS MANAGEMENT FUNCTIONS ====================
+
+// Get all benefit settings
+export const getAllBenefitSettings = async () => {
+  try {
+    const benefitSettingsRef = collection(db, "benefit_settings");
+    const snapshot = await getDocs(benefitSettingsRef);
+    
+    const settings = {};
+    snapshot.docs.forEach(doc => {
+      settings[doc.id] = { id: doc.id, ...doc.data() };
+    });
+    
+    return { success: true, data: settings };
+  } catch (error) {
+    console.error("Error fetching benefit settings:", error);
+    return { success: false, message: "Failed to fetch benefit settings" };
+  }
+};
+
+// Get benefit setting by role
+export const getBenefitSettingByRole = async (role) => {
+  try {
+    const benefitSettingRef = doc(db, "benefit_settings", role);
+    const benefitSettingDoc = await getDoc(benefitSettingRef);
+    
+    if (benefitSettingDoc.exists()) {
+      return { success: true, data: { id: benefitSettingDoc.id, ...benefitSettingDoc.data() } };
+    } else {
+      return { success: false, message: "Benefit setting not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching benefit setting:", error);
+    return { success: false, message: "Failed to fetch benefit setting" };
+  }
+};
+
+// Create or update benefit setting
+export const setBenefitSetting = async (role, settingData, adminId = "ADM-202509-1344") => {
+  try {
+    const benefitSettingRef = doc(db, "benefit_settings", role);
+    const benefitSettingDoc = await getDoc(benefitSettingRef);
+    
+    const benefitData = {
+      profileName: settingData.profileName,
+      basedOn: settingData.basedOn, // "perKg" or "total"
+      benefitType: settingData.benefitType, // "fixed" or "percentage"
+      value: parseFloat(settingData.value),
+      currency: settingData.currency || "HTG",
+      isActive: settingData.isActive !== undefined ? settingData.isActive : true,
+      lastUpdated: new Date(),
+      updatedBy: adminId
+    };
+
+    if (benefitSettingDoc.exists()) {
+      // Update existing setting
+      await updateDoc(benefitSettingRef, benefitData);
+      return { 
+        success: true, 
+        message: `${settingData.profileName} benefit setting updated successfully`,
+        data: { id: role, ...benefitData }
+      };
+    } else {
+      // Create new setting
+      await setDoc(benefitSettingRef, benefitData);
+      return { 
+        success: true, 
+        message: `${settingData.profileName} benefit setting created successfully`,
+        data: { id: role, ...benefitData }
+      };
+    }
+  } catch (error) {
+    console.error("Error setting benefit:", error);
+    return { success: false, message: "Failed to set benefit setting" };
+  }
+};
+
+// Update multiple benefit settings at once
+export const updateAllBenefitSettings = async (settingsData, adminId = "ADM-202509-1344") => {
+  try {
+    const updatePromises = Object.entries(settingsData).map(([role, data]) => 
+      setBenefitSetting(role, data, adminId)
+    );
+    
+    const results = await Promise.all(updatePromises);
+    const hasErrors = results.some(result => !result.success);
+    
+    if (hasErrors) {
+      return { success: false, message: "Some benefit settings failed to update" };
+    }
+    
+    return { success: true, message: "All benefit settings updated successfully" };
+  } catch (error) {
+    console.error("Error updating benefit settings:", error);
+    return { success: false, message: "Failed to update benefit settings" };
+  }
+};
+
+// Delete benefit setting
+export const deleteBenefitSetting = async (role) => {
+  try {
+    const benefitSettingRef = doc(db, "benefit_settings", role);
+    await deleteDoc(benefitSettingRef);
+    
+    return { success: true, message: "Benefit setting deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting benefit setting:", error);
+    return { success: false, message: "Failed to delete benefit setting" };
+  }
+};
+
+// Get benefit calculation for a specific role and transaction
+export const calculateBenefit = async (role, transactionData) => {
+  try {
+    const benefitSetting = await getBenefitSettingByRole(role);
+    
+    if (!benefitSetting.success) {
+      return { success: false, message: "Benefit setting not found" };
+    }
+    
+    const setting = benefitSetting.data;
+    let calculatedBenefit = 0;
+    
+    if (setting.basedOn === "perKg" && setting.benefitType === "fixed") {
+      // Fixed amount per kg
+      calculatedBenefit = setting.value * (transactionData.totalQty || 0);
+    } else if (setting.basedOn === "total" && setting.benefitType === "percentage") {
+      // Percentage of total transaction
+      calculatedBenefit = (setting.value / 100) * (transactionData.totalCost || 0);
+    }
+    
+    return { 
+      success: true, 
+      data: {
+        role: role,
+        benefitAmount: calculatedBenefit,
+        currency: setting.currency,
+        calculationMethod: `${setting.benefitType} ${setting.basedOn}`,
+        setting: setting
+      }
+    };
+  } catch (error) {
+    console.error("Error calculating benefit:", error);
+    return { success: false, message: "Failed to calculate benefit" };
+  }
+};
+
 // ==================== WALLET MANAGEMENT FUNCTIONS ====================
 
 // Get all withdrawals from the withdrawals collection
