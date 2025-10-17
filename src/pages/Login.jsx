@@ -141,7 +141,7 @@ export default function LoginPage() {
 
           {/* Forgot password link */}
           <Box textAlign="left" mt={1}>
-            <Link to="/forgot-password" style={{ color: colors.accent }}>
+            <Link to="/forgot-password" style={{ color: '#00588be0' }}>
               Forgot password?
             </Link>
           </Box>
@@ -157,9 +157,9 @@ export default function LoginPage() {
               py: 1.5,
               fontWeight: 600,
               fontSize: "18px",
-              backgroundColor: colors.action,
+              background: 'linear-gradient(135deg, #00588be0 0%, #00a8e8 100%)',
               "&:hover": {
-                backgroundColor: colors.actionHover,
+                background: 'linear-gradient(135deg, #004d6b 0%, #0077be 100%)',
               },
             }}
           >
