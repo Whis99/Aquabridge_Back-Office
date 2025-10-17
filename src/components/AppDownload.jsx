@@ -38,8 +38,8 @@ const AppDownload = () => {
   const [message, setMessage] = useState({ type: '', text: '' })
 
   // APK file path (stored in public folder)
-  const apkFilePath = "/downloads/aquabridge-app-v1.2.0.apk"
-  const apkFileName = "aquabridge-app-v1.2.0.apk"
+  const apkFilePath = "/downloads/aquabridge-app-v1.0.0.apk"
+  const apkFileName = "aquabridge-app-v1.0.0.apk"
 
   // Handle APK download
   const handleDownload = async () => {
@@ -267,7 +267,7 @@ const AppDownload = () => {
               fontSize: '0.9rem'
             }}
           >
-            Version 1.2.0 • 12.4 MB • Android 7.0+
+            Version 1.0.0 • 65.9 MB • Android 7.0+
           </Typography>
         </CardContent>
       </Card>

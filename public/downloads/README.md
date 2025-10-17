@@ -7,9 +7,7 @@ This directory contains the Aquabridge mobile application APK files for admin di
 ```
 public/downloads/
 ├── README.md (this file)
-├── aquabridge-app-v1.2.0.apk (current version)
-├── aquabridge-app-v1.1.5.apk (previous version)
-└── aquabridge-app-v1.1.0.apk (older version)
+├── aquabridge-app-v1.0.0.apk (current version)
 ```
 
 ## How to Add New APK Versions
