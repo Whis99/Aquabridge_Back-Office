@@ -6,7 +6,8 @@ import {
   AccountBalanceWallet, 
   Person,
   Receipt as TransactionsIcon,
-  ShoppingCart as OrdersIcon
+  ShoppingCart as OrdersIcon,
+  Download as DownloadIcon
 } from "@mui/icons-material"
 
 import { Dashboard } from "./components/Dashboard"
@@ -17,6 +18,7 @@ import Wallet from "./components/Wallet"
 import Profile from "./components/Profile"
 import Transactions from "./components/Transactions"
 import Orders from "./components/Orders"
+import AppDownload from "./components/AppDownload"
 
 export const navigationItems = [
   { title: "Dashboard", icon: DashboardIcon, component: Dashboard, path: "/home" },
@@ -24,7 +26,8 @@ export const navigationItems = [
   { title: "Stock", icon: TrendingUp, component: Stock, path: "/home/stock" },
   { title: "Orders", icon: OrdersIcon, component: Orders, path: "/home/orders" },
   { title: "Transactions", icon: TransactionsIcon, component: Transactions, path: "/home/transactions" },
-  // { title: "Market", icon: AttachMoney, component: Market, path: "/home/market" },
   { title: "Wallet", icon: AccountBalanceWallet, component: Wallet, path: "/home/wallet" },
+  { title: "App Download", icon: DownloadIcon, component: AppDownload, path: "/home/download" },
+  // { title: "Market", icon: AttachMoney, component: Market, path: "/home/market" },
   { title: "Profile", icon: Person, component: Profile, path: "/home/profile" },
 ]

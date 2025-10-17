@@ -8,6 +8,7 @@ import Stocks from './components/Stocks';
 import Orders from './components/Orders';
 import Transactions from './components/Transactions';
 import Wallet from './components/Wallet';
+import AppDownload from './components/AppDownload';
 import Profile from './components/Profile';
 
 import './App.css'
@@ -28,6 +29,7 @@ function App() {
                  <Route path="orders" element={<Orders />} />
                  <Route path="transactions" element={<Transactions />} />
                  <Route path="wallet" element={<Wallet />} />
+                 <Route path="download" element={<AppDownload />} />
                  <Route path="profile" element={<Profile />} />
                </Route>
       </Routes>

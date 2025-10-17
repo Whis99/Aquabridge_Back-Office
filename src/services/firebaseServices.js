@@ -559,6 +559,216 @@ export const updateStock = async (entityId, stockData) => {
   }
 };
 
+// ==================== EEL PRICE MANAGEMENT FUNCTIONS ====================
+
+// Get all eel prices from the eel_prices collection
+export const getAllEelPrices = async () => {
+  try {
+    const eelPricesRef = collection(db, "eel_prices");
+    const snapshot = await getDocs(eelPricesRef);
+    return snapshot;
+  } catch (error) {
+    console.error("Error fetching eel prices:", error);
+    throw error;
+  }
+};
+
+// Get active eel price
+export const getActiveEelPrice = async (currency = "USD") => {
+  try {
+    const eelPricesQuery = query(
+      collection(db, "eel_prices"),
+      where("isActive", "==", true),
+      where("currency", "==", currency)
+    );
+    const snapshot = await getDocs(eelPricesQuery);
+    
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      return { success: true, data: { id: doc.id, ...doc.data() } };
+    } else {
+      return { success: false, message: "No active eel price found" };
+    }
+  } catch (error) {
+    console.error("Error fetching active eel price:", error);
+    return { success: false, message: "Failed to fetch active eel price" };
+  }
+};
+
+// Get eel price by ID
+export const getEelPriceById = async (priceId) => {
+  try {
+    const eelPriceRef = doc(db, "eel_prices", priceId);
+    const eelPriceDoc = await getDoc(eelPriceRef);
+    
+    if (eelPriceDoc.exists()) {
+      return { success: true, data: { id: eelPriceDoc.id, ...eelPriceDoc.data() } };
+    } else {
+      return { success: false, message: "Eel price not found" };
+    }
+  } catch (error) {
+    console.error("Error fetching eel price:", error);
+    return { success: false, message: "Failed to fetch eel price" };
+  }
+};
+
+// Create new eel price
+export const createEelPrice = async (priceData, adminId = "ADM-202509-1344") => {
+  try {
+    // Generate custom ID: EEL-YYYYMMDD-HHMMSS
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    const customId = `EEL-${year}${month}${day}-${hours}${minutes}${seconds}`;
+    
+    // Calculate price per gram
+    const pricePerGram = priceData.pricePerKg / 1000;
+    
+    const eelPriceData = {
+      pricePerKg: parseFloat(priceData.pricePerKg),
+      pricePerGram: parseFloat(pricePerGram.toFixed(4)),
+      currency: priceData.currency || "USD",
+      isActive: priceData.isActive !== undefined ? priceData.isActive : true,
+      createdBy: adminId,
+      createdAt: new Date(),
+      updatedBy: adminId,
+      updatedAt: new Date(),
+      notes: priceData.notes || ""
+    };
+
+    // If this price is being set as active, deactivate all other prices for this currency
+    if (eelPriceData.isActive) {
+      await deactivateOldEelPrices(priceData.currency, adminId);
+    }
+
+    // Create the new eel price document
+    await setDoc(doc(db, "eel_prices", customId), eelPriceData);
+    
+    return { 
+      success: true, 
+      message: "Eel price created successfully",
+      data: { id: customId, ...eelPriceData }
+    };
+  } catch (error) {
+    console.error("Error creating eel price:", error);
+    return { success: false, message: "Failed to create eel price" };
+  }
+};
+
+// Update eel price
+export const updateEelPrice = async (priceId, updateData, adminId = "ADM-202509-1344") => {
+  try {
+    const eelPriceRef = doc(db, "eel_prices", priceId);
+    const eelPriceDoc = await getDoc(eelPriceRef);
+    
+    if (!eelPriceDoc.exists()) {
+      return { success: false, message: "Eel price not found" };
+    }
+
+    const updateFields = {
+      updatedBy: adminId,
+      updatedAt: new Date()
+    };
+
+    // Update price per kg and recalculate price per gram
+    if (updateData.pricePerKg !== undefined) {
+      updateFields.pricePerKg = parseFloat(updateData.pricePerKg);
+      updateFields.pricePerGram = parseFloat((updateData.pricePerKg / 1000).toFixed(4));
+    }
+
+    // Update other fields
+    if (updateData.currency !== undefined) updateFields.currency = updateData.currency;
+    if (updateData.isActive !== undefined) updateFields.isActive = updateData.isActive;
+    if (updateData.notes !== undefined) updateFields.notes = updateData.notes;
+
+    // If this price is being set as active, deactivate all other prices for this currency
+    if (updateFields.isActive) {
+      const currentData = eelPriceDoc.data();
+      await deactivateOldEelPrices(currentData.currency, adminId, priceId);
+    }
+
+    await updateDoc(eelPriceRef, updateFields);
+    
+    return { success: true, message: "Eel price updated successfully" };
+  } catch (error) {
+    console.error("Error updating eel price:", error);
+    return { success: false, message: "Failed to update eel price" };
+  }
+};
+
+// Delete eel price
+export const deleteEelPrice = async (priceId) => {
+  try {
+    const eelPriceRef = doc(db, "eel_prices", priceId);
+    await deleteDoc(eelPriceRef);
+    
+    return { success: true, message: "Eel price deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting eel price:", error);
+    return { success: false, message: "Failed to delete eel price" };
+  }
+};
+
+// Helper function to deactivate old eel prices
+const deactivateOldEelPrices = async (currency, adminId, excludeId = null) => {
+  try {
+    const eelPricesQuery = query(
+      collection(db, "eel_prices"),
+      where("isActive", "==", true),
+      where("currency", "==", currency)
+    );
+    const snapshot = await getDocs(eelPricesQuery);
+    
+    const updatePromises = [];
+    snapshot.docs.forEach(doc => {
+      if (doc.id !== excludeId) {
+        updatePromises.push(
+          updateDoc(doc.ref, {
+            isActive: false,
+            updatedBy: adminId,
+            updatedAt: new Date()
+          })
+        );
+      }
+    });
+    
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error("Error deactivating old eel prices:", error);
+    throw error;
+  }
+};
+
+// Get eel price history
+export const getEelPriceHistory = async (currency = null, limit = 50) => {
+  try {
+    let eelPricesQuery = collection(db, "eel_prices");
+    
+    if (currency) {
+      eelPricesQuery = query(
+        collection(db, "eel_prices"),
+        where("currency", "==", currency)
+      );
+    }
+    
+    const snapshot = await getDocs(eelPricesQuery);
+    const prices = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate())
+      .slice(0, limit);
+    
+    return { success: true, data: prices };
+  } catch (error) {
+    console.error("Error fetching eel price history:", error);
+    return { success: false, message: "Failed to fetch eel price history" };
+  }
+};
+
 // ==================== WALLET MANAGEMENT FUNCTIONS ====================
 
 // Get all withdrawals from the withdrawals collection
