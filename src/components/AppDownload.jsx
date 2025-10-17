@@ -1,38 +1,31 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Button,
-  Chip,
   useTheme,
   useMediaQuery,
   LinearProgress,
   Alert,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Container,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  Divider
+  ListItemText
 } from '@mui/material'
 import {
   Download as DownloadIcon,
   Info as InfoIcon,
+  PhoneAndroid as PhoneIcon,
   Security as SecurityIcon,
-  Speed as SpeedIcon,
-  BugReport as BugReportIcon,
-  NewReleases as NewReleaseIcon,
-  History as HistoryIcon,
-  CheckCircle as CheckIcon,
-  Warning as WarningIcon
+  InstallMobile as InstallIcon,
+  ExpandMore as ExpandMoreIcon,
+  CheckCircle as CheckIcon
 } from '@mui/icons-material'
 
 const AppDownload = () => {
@@ -42,53 +35,7 @@ const AppDownload = () => {
   // State
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
-  const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
-
-  // App version information
-  const currentVersion = {
-    version: "1.2.0",
-    build: "20250103",
-    releaseDate: "January 3, 2025",
-    fileSize: "12.4 MB",
-    minAndroidVersion: "7.0 (API 24)",
-    downloadCount: 1247
-  }
-
-  // Version history
-  const versionHistory = [
-    {
-      version: "1.2.0",
-      date: "January 3, 2025",
-      changes: [
-        "Enhanced user authentication",
-        "Improved offline functionality",
-        "Bug fixes for wallet transactions",
-        "UI/UX improvements"
-      ],
-      type: "major"
-    },
-    {
-      version: "1.1.5",
-      date: "December 20, 2024",
-      changes: [
-        "Fixed crash on order submission",
-        "Improved sync performance",
-        "Updated security protocols"
-      ],
-      type: "patch"
-    },
-    {
-      version: "1.1.0",
-      date: "December 10, 2024",
-      changes: [
-        "Added wallet management features",
-        "Enhanced stock tracking",
-        "New notification system"
-      ],
-      type: "minor"
-    }
-  ]
 
   // APK file path (stored in public folder)
   const apkFilePath = "/downloads/aquabridge-app-v1.2.0.apk"
@@ -149,373 +96,353 @@ const AppDownload = () => {
     }
   }
 
-  // Get version type color
-  const getVersionTypeColor = (type) => {
-    switch (type) {
-      case 'major': return '#f44336'
-      case 'minor': return '#ff9800'
-      case 'patch': return '#4caf50'
-      default: return '#757575'
-    }
-  }
-
-  // Get version type label
-  const getVersionTypeLabel = (type) => {
-    switch (type) {
-      case 'major': return 'Major Update'
-      case 'minor': return 'Minor Update'
-      case 'patch': return 'Bug Fix'
-      default: return 'Update'
-    }
-  }
-
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
       {/* Header Section */}
-      <Box sx={{ mb: { xs: 1, md: 1.5 }, textAlign: 'center' }}>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography
-          variant={isMobile ? "h5" : "h4"}
+          variant={isMobile ? "h4" : "h3"}
           sx={{
-            color: '#00588be0',
-            fontWeight: 600,
-            mb: 0.5
+            background: 'linear-gradient(135deg, #00588be0 0%, #00a8e8 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 700,
+            mb: 2,
+            letterSpacing: '-0.02em'
           }}
         >
-          Aquabridge Mobile App
+          APK Download
         </Typography>
         <Typography
-          variant="body2"
+          variant="h6"
           sx={{
-            color: '#4f4f4fb3',
-            fontSize: isMobile ? '0.8rem' : '0.9rem'
+            color: '#666',
+            fontWeight: 400,
+            maxWidth: 600,
+            mx: 'auto',
+            lineHeight: 1.6
           }}
         >
-          Download the latest version of the Aquabridge mobile application
+          Download the Aquabridge mobile application for Android devices
         </Typography>
       </Box>
 
+      {/* Message Alert */}
       {message.text && (
-        <Alert severity={message.type} sx={{ mb: 2 }}>
+        <Alert 
+          severity={message.type} 
+          sx={{ 
+            mb: 3,
+            borderRadius: 2,
+            '& .MuiAlert-message': {
+              width: '100%'
+            }
+          }}
+        >
           {message.text}
         </Alert>
       )}
 
       {/* Main Download Card */}
       <Card sx={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(16px)',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: 3,
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        mb: 3,
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         transition: 'all 0.3s ease',
         '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
+          transform: 'translateY(-4px)',
+          boxShadow: '0 12px 40px rgba(0, 168, 232, 0.15)'
         }
       }}>
-        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-          <Grid container spacing={3} alignItems="center">
-            {/* App Info */}
-            <Grid item xs={12} md={8}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Box sx={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 700 }}>
-                    AB
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="h5" sx={{ color: '#0e0e0eff', fontWeight: 600, mb: 0.5 }}>
-                    Aquabridge
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                    Glass Eel Supply Chain Management
-                  </Typography>
-                </Box>
-              </Box>
+        <CardContent sx={{ p: { xs: 4, md: 6 }, textAlign: 'center' }}>
+          {/* App Icon */}
+          <Box sx={{
+            width: 80,
+            height: 80,
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #00588be0 0%, #00a8e8 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 3,
+            boxShadow: '0 8px 24px rgba(0, 168, 232, 0.3)'
+          }}>
+            <Typography variant="h4" sx={{ color: '#ffffff', fontWeight: 700 }}>
+              AB
+            </Typography>
+          </Box>
 
-              {/* Version Info */}
-              <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" sx={{ color: '#4f4f4fb3', mb: 0.5 }}>Version</Typography>
-                  <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                    {currentVersion.version}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" sx={{ color: '#4f4f4fb3', mb: 0.5 }}>Build</Typography>
-                  <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                    {currentVersion.build}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" sx={{ color: '#4f4f4fb3', mb: 0.5 }}>Size</Typography>
-                  <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                    {currentVersion.fileSize}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" sx={{ color: '#4f4f4fb3', mb: 0.5 }}>Downloads</Typography>
-                  <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                    {currentVersion.downloadCount.toLocaleString()}
-                  </Typography>
-                </Grid>
-              </Grid>
+          {/* App Info */}
+          <Typography
+            variant="h4"
+            sx={{
+              color: '#333',
+              fontWeight: 600,
+              mb: 1
+            }}
+          >
+            Aquabridge
+          </Typography>
+          
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#666',
+              mb: 3,
+              fontSize: '1.1rem'
+            }}
+          >
+            Glass Eel Supply Chain Management
+          </Typography>
 
-              {/* Requirements */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <InfoIcon sx={{ color: '#4f4f4fb3', fontSize: 16 }} />
-                <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                  Requires Android {currentVersion.minAndroidVersion} or higher
-                </Typography>
-              </Box>
-            </Grid>
+          {/* Download Button */}
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownload}
+            disabled={isDownloading}
+            sx={{
+              background: 'linear-gradient(135deg, #00588be0 0%, #00a8e8 100%)',
+              borderRadius: 2,
+              py: 2,
+              px: 4,
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              boxShadow: '0 8px 24px rgba(0, 168, 232, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #004d6b 0%, #0077be 100%)',
+                boxShadow: '0 12px 32px rgba(0, 168, 232, 0.4)',
+                transform: 'translateY(-2px)'
+              },
+              '&:disabled': {
+                background: '#ccc',
+                color: '#666'
+              },
+              mb: 3
+            }}
+          >
+            {isDownloading ? 'Downloading...' : 'Download APK'}
+          </Button>
 
-            {/* Download Section */}
-            <Grid item xs={12} md={4}>
-              <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<DownloadIcon />}
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  sx={{
-                    background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
-                    },
-                    py: 1.5,
-                    px: 3,
-                    mb: 2
-                  }}
-                >
-                  {isDownloading ? 'Downloading...' : 'Download APK'}
-                </Button>
+          {/* Download Progress */}
+          {isDownloading && (
+            <Box sx={{ mb: 3 }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={downloadProgress}
+                sx={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                  mb: 2,
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #00588be0 0%, #00a8e8 100%)'
+                  }
+                }}
+              />
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#666',
+                  fontWeight: 500
+                }}
+              >
+                {Math.round(downloadProgress)}% complete
+              </Typography>
+            </Box>
+          )}
 
-                {/* Download Progress */}
-                {isDownloading && (
-                  <Box sx={{ mb: 2 }}>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={downloadProgress}
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 3,
-                          background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)'
-                        }
-                      }}
-                    />
-                    <Typography variant="caption" sx={{ color: '#4f4f4fb3', mt: 1, display: 'block' }}>
-                      {Math.round(downloadProgress)}% complete
-                    </Typography>
-                  </Box>
-                )}
-
-                <Typography variant="caption" sx={{ color: '#4f4f4fb3', display: 'block' }}>
-                  Released on {currentVersion.releaseDate}
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          {/* Version Info */}
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#999',
+              fontSize: '0.9rem'
+            }}
+          >
+            Version 1.2.0 • 12.4 MB • Android 7.0+
+          </Typography>
         </CardContent>
       </Card>
 
-      {/* Features and Info Cards */}
-      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <Card sx={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            height: '100%'
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <SecurityIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                  Security
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                End-to-end encryption, secure authentication, and regular security updates to protect your data.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            height: '100%'
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <SpeedIcon sx={{ color: '#2196f3', fontSize: 20 }} />
-                <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                  Performance
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                Optimized for speed and efficiency with offline capabilities and real-time sync.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            height: '100%'
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <BugReportIcon sx={{ color: '#ff9800', fontSize: 20 }} />
-                <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                  Support
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                24/7 technical support and regular updates to ensure the best user experience.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Version History Section */}
+      {/* Installation Walkthrough */}
       <Card sx={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)'
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: 3,
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        mt: 3
       }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-              Version History
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<HistoryIcon />}
-              onClick={() => setShowVersionHistory(true)}
+        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+            <InstallIcon sx={{ color: '#00588be0', fontSize: 24 }} />
+            <Typography
+              variant="h5"
               sx={{
-                borderColor: 'rgba(0, 168, 232, 0.3)',
-                color: '#00a8e8',
-                '&:hover': {
-                  borderColor: '#00a8e8',
-                  background: 'rgba(0, 168, 232, 0.1)'
+                color: '#333',
+                fontWeight: 600
+              }}
+            >
+              Installation Guide
+            </Typography>
+          </Box>
+
+          {/* Important Notice */}
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                color: '#00588be0'
+              }
+            }}
+            icon={<InfoIcon />}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              <strong>Important:</strong> Since this is not downloaded from Google Play Store, you'll need to enable "Install from Unknown Sources" on your Android device.
+            </Typography>
+          </Alert>
+
+          {/* Installation Steps */}
+          <Accordion sx={{ 
+            boxShadow: 'none',
+            border: '1px solid rgba(0, 168, 232, 0.2)',
+            borderRadius: 2,
+            mb: 2,
+            '&:before': { display: 'none' }
+          }}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: '#00588be0' }} />}
+              sx={{
+                backgroundColor: 'rgba(0, 168, 232, 0.05)',
+                borderRadius: 2,
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0'
                 }
               }}
             >
-              View All
-            </Button>
-          </Box>
+              <Typography variant="h6" sx={{ color: '#333', fontWeight: 600 }}>
+                Step-by-Step Installation
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 3 }}>
+              <List>
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <Typography sx={{ 
+                      color: '#00588be0', 
+                      fontWeight: 700, 
+                      fontSize: '1.2rem',
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      1
+                    </Typography>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Enable Unknown Sources"
+                    secondary="Go to Settings → Security → Install unknown apps → Allow from this source"
+                    primaryTypographyProps={{ fontWeight: 600, color: '#333' }}
+                    secondaryTypographyProps={{ color: '#666', fontSize: '0.9rem' }}
+                  />
+                </ListItem>
 
-          {/* Latest Version Preview */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Chip
-              label={getVersionTypeLabel(versionHistory[0].type)}
-              size="small"
-              sx={{
-                backgroundColor: `${getVersionTypeColor(versionHistory[0].type)}20`,
-                color: getVersionTypeColor(versionHistory[0].type),
-                fontWeight: 500
-              }}
-            />
-            <Typography variant="body1" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-              v{versionHistory[0].version}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-              {versionHistory[0].date}
-            </Typography>
-          </Box>
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <Typography sx={{ 
+                      color: '#00588be0', 
+                      fontWeight: 700, 
+                      fontSize: '1.2rem',
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      2
+                    </Typography>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Download the APK"
+                    secondary="Click the 'Download APK' button above and wait for download to complete"
+                    primaryTypographyProps={{ fontWeight: 600, color: '#333' }}
+                    secondaryTypographyProps={{ color: '#666', fontSize: '0.9rem' }}
+                  />
+                </ListItem>
 
-          <Typography variant="body2" sx={{ color: '#4f4f4fb3', mb: 2 }}>
-            Latest changes:
-          </Typography>
-          <List dense>
-            {versionHistory[0].changes.slice(0, 3).map((change, index) => (
-              <ListItem key={index} sx={{ py: 0.5 }}>
-                <ListItemIcon sx={{ minWidth: 20 }}>
-                  <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={change}
-                  primaryTypographyProps={{ 
-                    variant: 'body2',
-                    sx: { color: '#0e0e0eff' }
-                  }}
-                />
-              </ListItem>
-            ))}
-          </List>
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <Typography sx={{ 
+                      color: '#00588be0', 
+                      fontWeight: 700, 
+                      fontSize: '1.2rem',
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 168, 232, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      3
+                    </Typography>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Install the App"
+                    secondary="Open your Downloads folder, tap the APK file, and follow the installation prompts"
+                    primaryTypographyProps={{ fontWeight: 600, color: '#333' }}
+                    secondaryTypographyProps={{ color: '#666', fontSize: '0.9rem' }}
+                  />
+                </ListItem>
+
+                <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <CheckIcon sx={{ color: '#4caf50', fontSize: 24 }} />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Launch Aquabridge"
+                    secondary="Find the Aquabridge app icon on your home screen and tap to launch"
+                    primaryTypographyProps={{ fontWeight: 600, color: '#333' }}
+                    secondaryTypographyProps={{ color: '#666', fontSize: '0.9rem' }}
+                  />
+                </ListItem>
+              </List>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Security Notice */}
+          <Alert 
+            severity="success" 
+            sx={{ 
+              borderRadius: 2,
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              border: '1px solid rgba(76, 175, 80, 0.2)'
+            }}
+            icon={<SecurityIcon />}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              <strong>Security Note:</strong> This APK is digitally signed and verified. It's safe to install on your device.
+            </Typography>
+          </Alert>
         </CardContent>
       </Card>
-
-      {/* Version History Dialog */}
-      <Dialog open={showVersionHistory} onClose={() => setShowVersionHistory(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ background: 'linear-gradient(135deg, #00a8e8 0%, #0077be 100%)', color: '#ffffff', p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>Version History</Typography>
-        </DialogTitle>
-        <DialogContent dividers sx={{ p: 3 }}>
-          {versionHistory.map((version, index) => (
-            <Box key={version.version}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Chip
-                  label={getVersionTypeLabel(version.type)}
-                  size="small"
-                  sx={{
-                    backgroundColor: `${getVersionTypeColor(version.type)}20`,
-                    color: getVersionTypeColor(version.type),
-                    fontWeight: 500
-                  }}
-                />
-                <Typography variant="h6" sx={{ color: '#0e0e0eff', fontWeight: 600 }}>
-                  v{version.version}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#4f4f4fb3' }}>
-                  {version.date}
-                </Typography>
-              </Box>
-              <List dense>
-                {version.changes.map((change, changeIndex) => (
-                  <ListItem key={changeIndex} sx={{ py: 0.5 }}>
-                    <ListItemIcon sx={{ minWidth: 20 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={change}
-                      primaryTypographyProps={{ 
-                        variant: 'body2',
-                        sx: { color: '#0e0e0eff' }
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              {index < versionHistory.length - 1 && <Divider sx={{ my: 2 }} />}
-            </Box>
-          ))}
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setShowVersionHistory(false)} variant="outlined">Close</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </Container>
   )
 }
 
