@@ -1057,38 +1057,35 @@ export const updateWalletBalance = async (userId, amount, reason, adminId = "ADM
 // Fetch credit requests with optional filters (status, user, limit)
 export const getCreditRequests = async ({ status = null, userId = null, limit = 50 } = {}) => {
   try {
-    const constraints = [];
+    const baseConstraints = [];
 
-    // Filter by status when provided
-    if (status) {
-      constraints.push(where("status", "==", status));
-    }
-
-    // Filter by requesting user when provided
+    // When a specific user is targeted, use Firestore filtering; status is filtered locally to avoid composite index requirements.
     if (userId) {
-      constraints.push(where("user_id", "==", userId));
+      baseConstraints.push(where("user_id", "==", userId));
     }
 
-    // Build the query with ordering by submission date (newest first)
-    let creditRequestQuery = query(
-      collection(db, "credit_request"),
-      orderBy("submitted_at", "desc"),
-      limitQuery(limit)
-    );
+    baseConstraints.push(orderBy("submitted_at", "desc"), limitQuery(limit));
 
-    // Append optional constraints if any are defined
-    if (constraints.length > 0) {
-      creditRequestQuery = query(collection(db, "credit_request"), ...constraints, orderBy("submitted_at", "desc"), limitQuery(limit));
-    }
-
+    const creditRequestQuery = query(collection(db, "credit_requests"), ...baseConstraints);
     const snapshot = await getDocs(creditRequestQuery);
+
+    let requests = snapshot.docs.map((creditDoc) => ({
+      id: creditDoc.id,
+      ...creditDoc.data()
+    }));
+
+    // Normalize and apply status filtering client-side (case-insensitive, trimmed) so pending requests with stray casing still surface.
+    if (status) {
+      const normalizedTarget = String(status).toLowerCase().trim();
+      requests = requests.filter((request) => {
+        const currentStatus = request.status ? String(request.status).toLowerCase().trim() : "";
+        return currentStatus === normalizedTarget;
+      });
+    }
 
     return {
       success: true,
-      data: snapshot.docs.map((creditDoc) => ({
-        id: creditDoc.id,
-        ...creditDoc.data()
-      }))
+      data: requests
     };
   } catch (error) {
     console.error("Error fetching credit requests:", error);
@@ -1110,7 +1107,7 @@ export const approveCreditRequest = async (requestId, adminId = "ADM-202509-1344
     return { success: false, message: "Admin id is required to approve credit requests" };
   }
 
-  const creditRequestRef = doc(db, "credit_request", requestId);
+  const creditRequestRef = doc(db, "credit_requests", requestId);
 
   try {
     await runTransaction(db, async (transaction) => {
@@ -1169,7 +1166,7 @@ export const rejectCreditRequest = async (requestId, adminId = "ADM-202509-1344"
     return { success: false, message: "A rejection reason is required" };
   }
 
-  const creditRequestRef = doc(db, "credit_request", requestId);
+  const creditRequestRef = doc(db, "credit_requests", requestId);
 
   try {
     await runTransaction(db, async (transaction) => {
@@ -1208,11 +1205,7 @@ export const rejectCreditRequest = async (requestId, adminId = "ADM-202509-1344"
 };
 
 // Process an approved credit request and credit the user's wallet
-export const processCreditRequest = async (
-  requestId,
-  adminId = "ADM-202509-1344",
-  { transactionReference = "", notes = undefined } = {}
-) => {
+export const processCreditRequest = async (requestId, adminId = "ADM-202509-1344") => {
   if (!requestId) {
     return { success: false, message: "Credit request id is required" };
   }
@@ -1221,122 +1214,58 @@ export const processCreditRequest = async (
     return { success: false, message: "Admin id is required to process credit requests" };
   }
 
-  const creditRequestRef = doc(db, "credit_request", requestId);
-  let creditRequestData;
+  const creditRequestRef = doc(db, "credit_requests", requestId);
+  const snapshot = await getDoc(creditRequestRef);
 
-  try {
-    creditRequestData = await runTransaction(db, async (transaction) => {
-      const snapshot = await transaction.get(creditRequestRef);
-
-      if (!snapshot.exists()) {
-        throw new Error("Credit request not found");
-      }
-
-      const requestData = snapshot.data();
-
-      if (requestData.status === "processed") {
-        throw new Error("Credit request has already been processed");
-      }
-
-      if (requestData.status === "rejected") {
-        throw new Error("Rejected credit requests cannot be processed");
-      }
-
-      if (requestData.status === "pending") {
-        throw new Error("Credit request must be approved before processing");
-      }
-
-      if (!requestData.user_id) {
-        throw new Error("Credit request is missing the target user id");
-      }
-
-      if (!requestData.amount || requestData.amount <= 0) {
-        throw new Error("Credit request has an invalid amount");
-      }
-
-      transaction.update(creditRequestRef, {
-        status: "processing",
-        updated_at: new Date()
-      });
-
-      return { id: snapshot.id, ...requestData };
-    });
-  } catch (error) {
-    console.error("Error locking credit request for processing:", error);
-    return { success: false, message: error.message || "Failed to lock credit request for processing" };
+  if (!snapshot.exists()) {
+    return { success: false, message: "Credit request not found" };
   }
 
-  // Apply the credit to the user's wallet; roll back status on failure
-  const creditMemo = `Credit request ${creditRequestData.credit_request_id || creditRequestData.id}`;
+  const requestData = snapshot.data();
+
+  if (requestData.status === "processed") {
+    return { success: false, message: "Credit request has already been processed" };
+  }
+
+  if (requestData.status === "rejected") {
+    return { success: false, message: "Rejected credit requests cannot be processed" };
+  }
+
+  if (!requestData.user_id) {
+    return { success: false, message: "Credit request is missing the target user id" };
+  }
+
+  if (!requestData.amount || requestData.amount <= 0) {
+    return { success: false, message: "Credit request has an invalid amount" };
+  }
+
+  const creditMemo = `Credit request ${requestData.credit_request_id || requestId}`;
   const walletResult = await updateWalletBalance(
-    creditRequestData.user_id,
-    creditRequestData.amount,
+    requestData.user_id,
+    requestData.amount,
     creditMemo,
     adminId
   );
 
   if (!walletResult.success) {
-    console.error("Wallet update failed, reverting credit request state:", walletResult.message);
-    await updateDoc(creditRequestRef, {
-      status: "approved",
-      updated_at: new Date()
-    });
-
     return {
       success: false,
       message: walletResult.message || "Failed to update wallet balance"
     };
   }
 
-  try {
-    const processedUpdates = {
-      status: "processed",
-      processed_at: new Date(),
-      processed_by: adminId,
-      updated_at: new Date(),
-      wallet_transaction_id: walletResult.transactionId || null
-    };
+  await updateDoc(creditRequestRef, {
+    status: "processed",
+    processed_at: new Date(),
+    processed_by: adminId,
+    updated_at: new Date(),
+    wallet_transaction_id: walletResult.transactionId || null
+  });
 
-    if (transactionReference) {
-      processedUpdates.transaction_reference = transactionReference;
-    }
-
-    if (notes !== undefined) {
-      processedUpdates.notes = notes;
-    }
-
-    await updateDoc(creditRequestRef, processedUpdates);
-
-    return {
-      success: true,
-      message: "Credit request processed and wallet updated successfully",
-      walletTransactionId: walletResult.transactionId || null,
-      newBalance: walletResult.newBalance
-    };
-  } catch (error) {
-    console.error("Error finalizing credit request processing:", error);
-
-    // Attempt to revert wallet credit if the Firestore update fails
-    const rollback = await updateWalletBalance(
-      creditRequestData.user_id,
-      -creditRequestData.amount,
-      `Rollback credit request ${creditRequestData.credit_request_id || creditRequestData.id}`,
-      adminId
-    );
-
-    if (!rollback.success) {
-      console.error("Failed to rollback wallet after credit request failure:", rollback.message);
-    }
-
-    // Restore the credit request to the approved state for manual retry
-    await updateDoc(creditRequestRef, {
-      status: "approved",
-      updated_at: new Date()
-    });
-
-    return {
-      success: false,
-      message: error.message || "Failed to finalize credit request processing"
-    };
-  }
+  return {
+    success: true,
+    message: "Credit request processed and wallet updated successfully",
+    walletTransactionId: walletResult.transactionId || null,
+    newBalance: walletResult.newBalance
+  };
 };

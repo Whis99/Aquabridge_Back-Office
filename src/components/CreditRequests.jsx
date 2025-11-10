@@ -129,7 +129,7 @@ const CreditRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [actionDialog, setActionDialog] = useState({ open: false, type: null })
-  const [actionForm, setActionForm] = useState({ notes: "", reason: "", transactionReference: "" })
+  const [actionForm, setActionForm] = useState({ reason: "" })
   const [actionError, setActionError] = useState("")
   const [actionLoading, setActionLoading] = useState(false)
   const [actionSuccess, setActionSuccess] = useState("")
@@ -209,19 +209,9 @@ const CreditRequests = () => {
 
     // Initialize form values based on action
     if (type === "reject") {
-      setActionForm({ notes: "", reason: "", transactionReference: "" })
-    } else if (type === "process") {
-      setActionForm({
-        notes: selectedRequest?.notes || "",
-        transactionReference: "",
-        reason: ""
-      })
+      setActionForm({ reason: "" })
     } else {
-      setActionForm({
-        notes: selectedRequest?.notes || "",
-        transactionReference: "",
-        reason: ""
-      })
+      setActionForm({ reason: "" })
     }
   }
 
@@ -229,13 +219,6 @@ const CreditRequests = () => {
     setActionDialog({ open: false, type: null })
     setActionError("")
     setActionSuccess("")
-  }
-
-  const handleActionFormChange = (field, value) => {
-    setActionForm((prev) => ({
-      ...prev,
-      [field]: value
-    }))
   }
 
   // Execute approve / reject / process flows with validation and error handling
@@ -254,7 +237,7 @@ const CreditRequests = () => {
 
       if (actionDialog.type === "approve") {
         // No special validation for approving; notes are optional
-        response = await approveCreditRequest(selectedRequest.id, undefined, actionForm.notes?.trim() || "")
+        response = await approveCreditRequest(selectedRequest.id)
       } else if (actionDialog.type === "reject") {
         // Ensure a reason is supplied before rejecting
         if (!actionForm.reason || actionForm.reason.trim().length < 5) {
@@ -265,7 +248,7 @@ const CreditRequests = () => {
         response = await rejectCreditRequest(selectedRequest.id, undefined, actionForm.reason.trim())
       } else if (actionDialog.type === "process") {
         // Confirm we have an approved credit request before processing
-        if (selectedRequest.status !== "approved") {
+        if ((selectedRequest.status || "").toLowerCase() !== "approved") {
           setActionError("Only approved credit requests can be processed.")
           setActionLoading(false)
           return
@@ -283,10 +266,7 @@ const CreditRequests = () => {
           return
         }
 
-        response = await processCreditRequest(selectedRequest.id, undefined, {
-          transactionReference: actionForm.transactionReference.trim(),
-          notes: actionForm.notes?.trim()
-        })
+        response = await processCreditRequest(selectedRequest.id)
       } else {
         setActionError("Unsupported action")
         setActionLoading(false)
@@ -315,24 +295,13 @@ const CreditRequests = () => {
             ? {
                 ...prev,
                 status: updatedStatus,
-                notes:
-                  actionDialog.type === "reject"
-                    ? prev.notes
-                    : actionDialog.type === "approve" || actionDialog.type === "process"
-                      ? actionForm.notes?.trim() || prev.notes
-                      : prev.notes,
                 rejection_reason:
                   actionDialog.type === "reject" ? actionForm.reason.trim() : prev.rejection_reason,
                 processed_at:
                   actionDialog.type === "process" ? new Date() : prev.processed_at,
                 processed_by:
                   actionDialog.type === "process" ? "ADM-202509-1344" : prev.processed_by,
-                transaction_reference:
-                  actionDialog.type === "process"
-                    ? actionForm.transactionReference.trim() || prev.transaction_reference
-                    : prev.transaction_reference,
-                wallet_transaction_id:
-                  response.walletTransactionId || prev.wallet_transaction_id,
+                wallet_transaction_id: response.walletTransactionId || prev.wallet_transaction_id,
                 updated_at: new Date()
               }
             : prev
@@ -775,16 +744,8 @@ const CreditRequests = () => {
           {actionDialog.type === "approve" && (
             <Stack spacing={3}>
               <Alert severity="info">
-                Approving confirms that the provided proof has been reviewed. You can add an optional note below.
+                Approving confirms the proof of deposit is valid. No additional information is required.
               </Alert>
-              <TextField
-                label="Internal Notes (optional)"
-                multiline
-                minRows={3}
-                value={actionForm.notes}
-                onChange={(event) => handleActionFormChange("notes", event.target.value)}
-                placeholder="Add any context that helps other admins understand this approval."
-              />
             </Stack>
           )}
 
@@ -798,32 +759,37 @@ const CreditRequests = () => {
                 multiline
                 minRows={3}
                 value={actionForm.reason}
-                onChange={(event) => handleActionFormChange("reason", event.target.value)}
+                onChange={(event) => setActionForm({ reason: event.target.value })}
                 placeholder="Explain why the request is rejected. e.g. Proof is missing, mismatch with bank statement, etc."
                 required
               />
             </Stack>
           )}
 
-          {actionDialog.type === "process" && (
+          {actionDialog.type === "process" && selectedRequest && (
             <Stack spacing={3}>
               <Alert severity="info">
-                Processing will credit the associated wallet immediately. Double-check the amount and destination before confirming.
+                Processing will immediately credit the wallet linked to the user below. Please double-check the destination and amount before confirming the transfer.
               </Alert>
-              <TextField
-                label="Transaction Reference (optional)"
-                value={actionForm.transactionReference}
-                onChange={(event) => handleActionFormChange("transactionReference", event.target.value)}
-                placeholder="Enter the bank transfer or internal reference number."
-              />
-              <TextField
-                label="Notes (optional)"
-                multiline
-                minRows={3}
-                value={actionForm.notes}
-                onChange={(event) => handleActionFormChange("notes", event.target.value)}
-                placeholder="Add context for bookkeeping (e.g. 'Funds settled on 2025-10-22')."
-              />
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="caption" sx={{ color: "#666", textTransform: "uppercase" }}>
+                  Wallet Beneficiary
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {selectedRequest.user_id}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#666", textTransform: "capitalize" }}>
+                  {selectedRequest.user_type || "—"}
+                </Typography>
+              </Paper>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="caption" sx={{ color: "#666", textTransform: "uppercase" }}>
+                  Credit Amount
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {formatAmount(selectedRequest.amount, selectedRequest.currency)}
+                </Typography>
+              </Paper>
             </Stack>
           )}
 
