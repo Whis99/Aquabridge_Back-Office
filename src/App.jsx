@@ -10,6 +10,7 @@ import Transactions from './components/Transactions';
 import Wallet from './components/Wallet';
 import AppDownload from './components/AppDownload';
 import Profile from './components/Profile';
+import CreditRequests from './components/CreditRequests';
 
 import './App.css'
 
@@ -29,6 +30,7 @@ function App() {
                  <Route path="orders" element={<Orders />} />
                  <Route path="transactions" element={<Transactions />} />
                  <Route path="wallet" element={<Wallet />} />
+                 <Route path="credit-requests" element={<CreditRequests />} />
                  <Route path="download" element={<AppDownload />} />
                  <Route path="profile" element={<Profile />} />
                </Route>
