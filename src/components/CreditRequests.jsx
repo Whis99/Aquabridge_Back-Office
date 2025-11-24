@@ -15,6 +15,7 @@ import {
   FormControl,
   Grid,
   IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
@@ -36,14 +37,16 @@ import {
   Close as CloseIcon,
   CreditScore as ProcessIcon,
   Refresh as RefreshIcon,
-  WarningAmber as RejectIcon
+  WarningAmber as RejectIcon,
+  AccountBalanceWallet as WalletIcon
 } from "@mui/icons-material"
 
 import {
   getCreditRequests,
   approveCreditRequest,
   rejectCreditRequest,
-  processCreditRequest
+  processCreditRequest,
+  updateWalletBalance
 } from "../services/firebaseServices"
 
 // Mapping of status values to consistent chip styling
@@ -133,6 +136,13 @@ const CreditRequests = () => {
   const [actionError, setActionError] = useState("")
   const [actionLoading, setActionLoading] = useState(false)
   const [actionSuccess, setActionSuccess] = useState("")
+  
+  // Wallet update dialog
+  const [walletUpdateDialog, setWalletUpdateDialog] = useState({ open: false })
+  const [walletUpdateForm, setWalletUpdateForm] = useState({ userId: "", amount: "", reason: "" })
+  const [walletUpdateError, setWalletUpdateError] = useState("")
+  const [walletUpdateLoading, setWalletUpdateLoading] = useState(false)
+  const [walletUpdateSuccess, setWalletUpdateSuccess] = useState("")
 
   // ==================== MEMOIZED VALUES ====================
 
@@ -219,6 +229,63 @@ const CreditRequests = () => {
     setActionDialog({ open: false, type: null })
     setActionError("")
     setActionSuccess("")
+  }
+
+  const handleOpenWalletUpdate = () => {
+    setWalletUpdateForm({
+      userId: "",
+      amount: "",
+      reason: ""
+    })
+    setWalletUpdateDialog({ open: true })
+    setWalletUpdateError("")
+    setWalletUpdateSuccess("")
+  }
+
+  const handleCloseWalletUpdate = () => {
+    setWalletUpdateDialog({ open: false })
+    setWalletUpdateForm({ userId: "", amount: "", reason: "" })
+    setWalletUpdateError("")
+    setWalletUpdateSuccess("")
+  }
+
+  const handleSubmitWalletUpdate = async () => {
+    if (!walletUpdateForm.userId || !walletUpdateForm.amount) {
+      setWalletUpdateError("Please fill in User ID and Amount")
+      return
+    }
+
+    const amount = parseFloat(walletUpdateForm.amount)
+    if (isNaN(amount) || amount === 0) {
+      setWalletUpdateError("Please enter a valid amount")
+      return
+    }
+
+    try {
+      setWalletUpdateLoading(true)
+      setWalletUpdateError("")
+      setWalletUpdateSuccess("")
+
+      const response = await updateWalletBalance(
+        walletUpdateForm.userId,
+        amount,
+        walletUpdateForm.reason || "Manual wallet update from credit requests page"
+      )
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update wallet balance")
+      }
+
+      setWalletUpdateSuccess(response.message || "Wallet balance updated successfully")
+      setTimeout(() => {
+        handleCloseWalletUpdate()
+      }, 2000)
+    } catch (error) {
+      console.error("Error updating wallet balance:", error)
+      setWalletUpdateError(error.message || "Failed to update wallet balance")
+    } finally {
+      setWalletUpdateLoading(false)
+    }
   }
 
   // Execute approve / reject / process flows with validation and error handling
@@ -385,6 +452,19 @@ const CreditRequests = () => {
               ))}
             </Select>
           </FormControl>
+          <Button
+            variant="contained"
+            startIcon={<WalletIcon />}
+            onClick={handleOpenWalletUpdate}
+            sx={{
+              background: 'linear-gradient(135deg, #00a8e8 0%, #0077b6 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #00a8e8 0%, #0077b6 100%)',
+              }
+            }}
+          >
+            Update Wallet
+          </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -814,6 +894,92 @@ const CreditRequests = () => {
             }
           >
             {actionLoading ? "Processing..." : "Confirm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Wallet Update Dialog */}
+      <Dialog
+        open={walletUpdateDialog.open}
+        onClose={handleCloseWalletUpdate}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Update Wallet Balance
+          </Typography>
+          <IconButton onClick={handleCloseWalletUpdate}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <Alert severity="info">
+              Update the wallet balance for the user. Positive amounts add to the balance, negative amounts subtract.
+            </Alert>
+            
+            <TextField
+              label="User ID"
+              value={walletUpdateForm.userId}
+              onChange={(e) => setWalletUpdateForm({ ...walletUpdateForm, userId: e.target.value })}
+              fullWidth
+              required
+              helperText="Enter the user ID to update their wallet balance"
+              placeholder="e.g., FIS-20250825-34408"
+            />
+            
+            <TextField
+              label="Amount"
+              type="number"
+              value={walletUpdateForm.amount}
+              onChange={(e) => setWalletUpdateForm({ ...walletUpdateForm, amount: e.target.value })}
+              fullWidth
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Typography sx={{ color: "#666" }}>$</Typography>
+                  </InputAdornment>
+                )
+              }}
+              helperText="Enter positive amount to add, negative to subtract"
+            />
+            
+            <TextField
+              label="Reason"
+              multiline
+              minRows={3}
+              value={walletUpdateForm.reason}
+              onChange={(e) => setWalletUpdateForm({ ...walletUpdateForm, reason: e.target.value })}
+              fullWidth
+              placeholder="Enter reason for this wallet balance update"
+            />
+
+            {walletUpdateError && (
+              <Alert severity="error">
+                {walletUpdateError}
+              </Alert>
+            )}
+            
+            {walletUpdateSuccess && (
+              <Alert severity="success">
+                {walletUpdateSuccess}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseWalletUpdate} disabled={walletUpdateLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmitWalletUpdate}
+            disabled={walletUpdateLoading}
+            startIcon={<WalletIcon />}
+          >
+            {walletUpdateLoading ? "Updating..." : "Update Wallet"}
           </Button>
         </DialogActions>
       </Dialog>
