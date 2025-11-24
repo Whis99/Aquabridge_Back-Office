@@ -20,13 +20,9 @@ import {
 } from '@mui/material'
 import {
   Security as SecurityIcon,
-  Visibility as VisibilityIcon,
-  Notifications as NotificationsIcon,
-  CreditCard as CreditCardIcon,
   Logout as LogoutIcon,
   Computer as ComputerIcon,
   AccessTime as AccessTimeIcon,
-  Edit as EditIcon,
   AdminPanelSettings as AdminIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
@@ -46,7 +42,6 @@ export default function Profile() {
   const [user, setUser] = useState(null)
   const [userData, setUserData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({})
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -114,31 +109,6 @@ export default function Profile() {
     return () => unsubscribe()
   }, [navigate])
 
-  const handleInputChange = (field) => (event) => {
-    setFormData({
-      ...formData,
-      [field]: event.target.value
-    })
-  }
-
-  const handleSave = () => {
-    setIsEditing(false)
-    console.log('Profile saved:', formData)
-    // Here you would typically update the user data in Firestore
-  }
-
-  const handleCancel = () => {
-    setFormData({
-      firstName: userData?.name?.split(' ')[0] || '',
-      lastName: userData?.name?.split(' ').slice(1).join(' ') || '',
-      email: userData?.email || user?.email,
-      phone: userData?.phone || '',
-      location: userData?.location || '',
-      role: userData?.role || 'admin'
-    })
-    setIsEditing(false)
-  }
-
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
@@ -152,11 +122,6 @@ export default function Profile() {
 
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
-  }
-
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'N/A'
-    return timestamp.toDate().toLocaleDateString()
   }
 
   if (isLoading) {
@@ -216,7 +181,7 @@ export default function Profile() {
             fontSize: isMobile ? '0.8rem' : '0.9rem'
           }}
         >
-          Manage your admin account settings
+          View your admin account information
         </Typography>
       </Box>
 
@@ -233,7 +198,7 @@ export default function Profile() {
       }}>
         <CardContent sx={{ p: { xs: 2, md: 3 } }}>
           {/* Section Header */}
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ mb: 3 }}>
             <Typography 
               variant={isMobile ? "h6" : "h5"} 
               sx={{ 
@@ -244,22 +209,6 @@ export default function Profile() {
             >
               Profile Information
             </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<EditIcon />}
-              onClick={() => setIsEditing(!isEditing)}
-              size="small"
-              sx={{
-                borderColor: 'rgba(0, 168, 232, 0.3)',
-                color: '#00a8e8',
-                '&:hover': {
-                  borderColor: '#00a8e8',
-                  background: 'rgba(0, 168, 232, 0.1)'
-                }
-              }}
-            >
-              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-            </Button>
           </Box>
 
           {/* Profile Content */}
@@ -294,8 +243,7 @@ export default function Profile() {
                     fullWidth
                     label="First Name"
                     value={formData.firstName}
-                    onChange={handleInputChange('firstName')}
-                    disabled={!isEditing}
+                    disabled
                     InputProps={{
                       startAdornment: <PersonIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
                     }}
@@ -305,12 +253,6 @@ export default function Profile() {
                         borderRadius: 2,
                         '& fieldset': {
                           borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(0, 168, 232, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00588be0',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -330,8 +272,7 @@ export default function Profile() {
                     fullWidth
                     label="Last Name"
                     value={formData.lastName}
-                    onChange={handleInputChange('lastName')}
-                    disabled={!isEditing}
+                    disabled
                     InputProps={{
                       startAdornment: <PersonIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
                     }}
@@ -341,12 +282,6 @@ export default function Profile() {
                         borderRadius: 2,
                         '& fieldset': {
                           borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(0, 168, 232, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00588be0',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -366,8 +301,7 @@ export default function Profile() {
                     fullWidth
                     label="Email Address"
                     value={formData.email}
-                    onChange={handleInputChange('email')}
-                    disabled={!isEditing}
+                    disabled
                     InputProps={{
                       startAdornment: <EmailIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
                     }}
@@ -377,12 +311,6 @@ export default function Profile() {
                         borderRadius: 2,
                         '& fieldset': {
                           borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(0, 168, 232, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00588be0',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -402,8 +330,7 @@ export default function Profile() {
                     fullWidth
                     label="Phone Number"
                     value={formData.phone}
-                    onChange={handleInputChange('phone')}
-                    disabled={!isEditing}
+                    disabled
                     InputProps={{
                       startAdornment: <PhoneIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
                     }}
@@ -413,12 +340,6 @@ export default function Profile() {
                         borderRadius: 2,
                         '& fieldset': {
                           borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(0, 168, 232, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00588be0',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -438,8 +359,7 @@ export default function Profile() {
                     fullWidth
                     label="Location"
                     value={formData.location}
-                    onChange={handleInputChange('location')}
-                    disabled={!isEditing}
+                    disabled
                     InputProps={{
                       startAdornment: <LocationIcon sx={{ color: '#4f4f4fb3', mr: 1 }} />
                     }}
@@ -449,12 +369,6 @@ export default function Profile() {
                         borderRadius: 2,
                         '& fieldset': {
                           borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(0, 168, 232, 0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00588be0',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -470,55 +384,6 @@ export default function Profile() {
                   />
                 </Grid>
               </Grid>
-
-              {/* Action Buttons */}
-              {isEditing && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2, 
-                  mt: 3,
-                  justifyContent: 'flex-end',
-                  flexWrap: 'wrap'
-                }}>
-                  <Button
-                    variant="outlined"
-                    onClick={handleCancel}
-                    sx={{
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                      color: '#0e0e0eff',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        borderColor: 'rgba(255, 255, 255, 0.3)'
-                      }
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={handleSave}
-                    sx={{
-                      backgroundColor: '#00588be0',
-                      '&:hover': {
-                        backgroundColor: '#004d7a'
-                      },
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600
-                    }}
-                  >
-                    Save Changes
-                  </Button>
-                </Box>
-              )}
             </Grid>
           </Grid>
         </CardContent>
