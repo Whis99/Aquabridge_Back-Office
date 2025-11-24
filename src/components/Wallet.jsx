@@ -102,11 +102,11 @@ const Wallet = () => {
         background: 'rgba(255, 255, 255, 0.1)',
         backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        transition: 'all 0.3s ease',
         height: '100%',
+        transition: 'all 0.3s ease',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: `0 12px 40px ${color}40`
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 32px rgba(0, 168, 232, 0.2)'
         }
       }}>
         <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -115,18 +115,18 @@ const Wallet = () => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            mb: 3,
-            pb: 2,
-            borderBottom: '2px solid rgba(0, 0, 0, 0.1)'
+            mb: 2,
+            pb: 1.5,
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Avatar sx={{ 
                 bgcolor: color,
-                width: { xs: 48, md: 56 },
-                height: { xs: 48, md: 56 },
+                width: { xs: 36, md: 40 },
+                height: { xs: 36, md: 40 },
                 boxShadow: `0 4px 20px ${color}40`
               }}>
-                <Icon sx={{ fontSize: { xs: 24, md: 28 } }} />
+                <Icon sx={{ fontSize: { xs: 18, md: 20 } }} />
               </Avatar>
               <Box>
                 <Typography
@@ -139,11 +139,12 @@ const Wallet = () => {
                 >
                   {title}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: '#4f4f4fb3',
-                    fontSize: isMobile ? '0.75rem' : '0.85rem'
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#4f4f4fb3',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.4
                   }}
                 >
                   {description}
@@ -157,15 +158,16 @@ const Wallet = () => {
                 backgroundColor: wallet.isActive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)',
                 color: wallet.isActive ? '#4caf50' : '#9e9e9e',
                 fontWeight: 600,
-                border: wallet.isActive ? '1px solid rgba(76, 175, 80, 0.3)' : '1px solid rgba(158, 158, 158, 0.3)'
+                border: wallet.isActive ? '1px solid rgba(76, 175, 80, 0.3)' : '1px solid rgba(158, 158, 158, 0.3)',
+                fontSize: '0.7rem'
               }}
             />
           </Box>
 
           {/* Balance Section */}
           <Box sx={{ 
-            mb: 3,
-            p: 2.5,
+            mb: 2,
+            p: { xs: 1.5, md: 2 },
             background: gradient,
             borderRadius: 2,
             textAlign: 'center',
@@ -175,22 +177,21 @@ const Wallet = () => {
               variant="caption"
               sx={{
                 color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: isMobile ? '0.7rem' : '0.8rem',
+                fontSize: '0.7rem',
                 fontWeight: 500,
                 textTransform: 'uppercase',
                 letterSpacing: 1,
-                mb: 1,
+                mb: 0.5,
                 display: 'block'
               }}
             >
               Total Balance
             </Typography>
             <Typography
-              variant={isMobile ? "h4" : "h3"}
+              variant={isMobile ? "h5" : "h4"}
               sx={{
                 color: '#ffffff',
-                fontWeight: 700,
-                mb: 0.5
+                fontWeight: 700
               }}
             >
               {formatCurrency(wallet.totalBalance)} {wallet.currency || 'HTG'}
@@ -223,7 +224,7 @@ const Wallet = () => {
                     fontFamily: 'monospace',
                     color: '#0e0e0eff',
                     fontWeight: 600,
-                    fontSize: isMobile ? '0.75rem' : '0.85rem'
+                    fontSize: '0.8rem'
                   }}
                 >
                   {wallet.walletId || wallet.id}
@@ -251,7 +252,7 @@ const Wallet = () => {
                   sx={{
                     color: '#0e0e0eff',
                     fontWeight: 600,
-                    fontSize: isMobile ? '0.75rem' : '0.85rem'
+                    fontSize: '0.8rem'
                   }}
                 >
                   {wallet.currency || 'HTG'}
@@ -278,7 +279,7 @@ const Wallet = () => {
                   variant="body2"
                   sx={{
                     color: '#0e0e0eff',
-                    fontSize: isMobile ? '0.7rem' : '0.8rem'
+                    fontSize: '0.8rem'
                   }}
                 >
                   {formatDate(wallet.createdAt)}
@@ -305,7 +306,7 @@ const Wallet = () => {
                   variant="body2"
                   sx={{
                     color: '#0e0e0eff',
-                    fontSize: isMobile ? '0.7rem' : '0.8rem'
+                    fontSize: '0.8rem'
                   }}
                 >
                   {formatDate(wallet.lastUpdated)}
@@ -313,9 +314,9 @@ const Wallet = () => {
               </Box>
             </Grid>
           </Grid>
-        </CardContent>
-      </Card>
-    )
+      </CardContent>
+    </Card>
+  )
   }
 
   if (isLoading) {
@@ -360,8 +361,8 @@ const Wallet = () => {
       </Box>
 
       {/* Wallets Grid */}
-      <Grid container spacing={{ xs: 2, md: 3 }}>
-        <Grid item xs={12} md={6}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+        <Box sx={{ flex: 1 }}>
           <WalletCard
             wallet={aquaBridgeWallet}
             title="AquaBridge Wallet"
@@ -370,8 +371,8 @@ const Wallet = () => {
             color="#00a8e8"
             gradient="linear-gradient(135deg, #00a8e8 0%, #0077b6 100%)"
           />
-        </Grid>
-        <Grid item xs={12} md={6}>
+        </Box>
+        <Box sx={{ flex: 1 }}>
           <WalletCard
             wallet={governmentWallet}
             title="Government Wallet"
@@ -380,8 +381,8 @@ const Wallet = () => {
             color="#f44336"
             gradient="linear-gradient(135deg, #f44336 0%, #c62828 100%)"
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   )
 }
