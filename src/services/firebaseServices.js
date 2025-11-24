@@ -33,7 +33,11 @@ export async function getAllActiveUserByRole(role) {
 
 // Get pending users by role
 export async function getPendingUsersByRole(role) {
-  const q = query(collection(db, "users"), where("role", "==", role), where("status", "==", "pending"));
+  const q = query(
+    collection(db, "users"),
+    where("role", "==", role),
+    where("account_status", "==", "pending")
+  );
   const snap = await getDocs(q);
   return snap;
 }

@@ -83,6 +83,8 @@ const Users = () => {
   const [adminMessage, setAdminMessage] = useState({ type: '', text: '' })
   const [showPassword, setShowPassword] = useState(false)
 
+  const excludedRoles = ["supervisor", "admin"]
+
   // Role options
   const roleOptions = [
     { value: "all", label: "All Roles", icon: PersonIcon },
@@ -109,10 +111,12 @@ const Users = () => {
         
         // Fetch pending users
         const pendingData = await getAllPendingUsers()
-        const pendingUsersList = pendingData.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        const pendingUsersList = pendingData.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter(user => !excludedRoles.includes(user.role))
         setPendingUsers(pendingUsersList)
 
         // Fetch all users (not just active ones)
@@ -146,11 +150,8 @@ const Users = () => {
   useEffect(() => {
     let filtered = activeUsers
 
-    // Exclude supervisors from the list
-    filtered = filtered.filter(user => user.role !== "supervisor")
-
-    // Exclude admin users (they have their own section)
-    filtered = filtered.filter(user => user.role !== "admin")
+    // Exclude supervisors and admin users (they have dedicated sections)
+    filtered = filtered.filter(user => !excludedRoles.includes(user.role))
 
     // Exclude pending users (they have their own section)
     filtered = filtered.filter(user => user.account_status !== "pending")
@@ -202,6 +203,7 @@ const Users = () => {
   // Handle active user details
   const handleViewUserDetails = async (user) => {
     try {
+      setUserDetails({})
       setSelectedUser(user)
       setActiveUserDetailsOpen(true)
       
@@ -209,7 +211,8 @@ const Users = () => {
       const additionalDetails = await getUserDetails(
         user.role === 'fisherman' ? 'fishermen' : 
         user.role === 'association' ? 'associations' : 
-        user.role === 'collection_center' ? 'collection_centers' : 'client',
+        user.role === 'collection_center' ? 'collection_centers' : 
+        user.role === 'client' ? 'clients' : null,
         user.user_id
       )
       
@@ -261,21 +264,26 @@ const Users = () => {
   // Get user details from specific collection
   const fetchUserDetails = async (user) => {
     try {
+      setUserDetails({})
       const collectionName = user.role === "fisherman" ? "fishermen" : 
                            user.role === "association" ? "associations" :
-                           user.role === "collection_center" ? "collection_centers" : "client"
+                           user.role === "collection_center" ? "collection_centers" : "clients"
       
       const detailsData = await getUserDetails(collectionName, user.user_id)
       if (!detailsData.empty) {
         setUserDetails(detailsData.docs[0].data())
+      } else {
+        setUserDetails({})
       }
     } catch (error) {
       console.error("Error fetching user details:", error)
+      setUserDetails({})
     }
   }
 
   // Handle user selection for approval
   const handleUserSelect = (user) => {
+    setUserDetails({})
     setSelectedUser(user)
     fetchUserDetails(user)
     setApproveDialogOpen(true)
